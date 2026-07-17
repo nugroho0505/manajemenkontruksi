@@ -2,156 +2,85 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Slip Gaji Karyawan - A5</title>
+    <title>Slip Gaji Karyawan</title>
     <style>
         @page { size: A5 portrait; margin: 10mm; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background-color: #e9ecef; color: #2c3e50; line-height: 1.4; font-size: 12px; }
-        *, *::before, *::after { box-sizing: border-box; }
-        .a5-container { max-width: 148mm; min-height: 210mm; margin: 0 auto; background-color: #fdfbf7; padding: 12mm; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        @media print { body { background-color: #fdfbf7; padding: 0; } .a5-container { max-width: 100%; margin: 0; padding: 0; box-shadow: none; } }
-        
-        .header { display: table; width: 100%; border-bottom: 2px solid #34495e; padding-bottom: 10px; margin-bottom: 15px; }
-        .header-left, .header-right { display: table-cell; width: 50%; vertical-align: middle; }
-        .header-right { text-align: right; }
-        .header-right h1 { font-size: 1.4em; margin: 0; color: #34495e; }
-        .logo-img { max-width: 150px; max-height: 70px; object-fit: contain; display: block; }
-        
-        .info-section { margin-bottom: 15px; background: #ffffff; padding: 10px; border: 1px solid #bdc3c7; border-left: 4px solid #34495e; border-radius: 4px; display: flex; flex-direction: column; gap: 5px; }
-        .info-row { display: table; width: 100%; }
-        .label { display: table-cell; width: 35%; font-weight: bold; }
-        .value { display: table-cell; width: 65%; }
-
-        h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 3px; margin-top: 15px; font-size: 1.1em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; background: #fff; }
-        th { background-color: #34495e; color: white; padding: 6px 8px; text-align: left; font-size: 0.9em; }
-        td { padding: 6px 8px; border-bottom: 1px solid #ecf0f1; font-size: 0.9em; }
-        .amount { text-align: right; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
-        .subtotal-row td { background-color: #f9f9f9; font-weight: bold; border-top: 1px solid #bdc3c7; }
-
-        .summary-box { margin-top: 20px; padding: 12px; background: #ecf0f1; border-radius: 4px; border-left: 4px solid #27ae60; }
-        .summary-row { display: flex; justify-content: space-between; align-items: center; }
-        .summary-label { font-size: 1em; font-weight: bold; }
-        .summary-value { font-size: 1.2em; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #27ae60; }
-        .terbilang-box { margin-top: 10px; padding: 8px 10px; background-color: #fff; border: 1px dashed #bdc3c7; font-style: italic; color: #333; border-radius: 4px; font-size: 0.9em; }
+        body { font-family: sans-serif; font-size: 12px; background: #eee; }
+        .a5-container { max-width: 148mm; margin: 0 auto; background: #fff; padding: 10mm; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+        .amount { text-align: right; font-family: monospace; }
+        .total { font-weight: bold; background: #f4f4f4; }
     </style>
 </head>
 <body>
     <div class="a5-container">
-        <div class="header">
-            <div class="header-left"><img src="logo.png" alt="Logo" class="logo-img"></div>
-            <div class="header-right">
-                <h1>SLIP GAJI</h1>
-                <p style="margin:2px 0 0 0; color:#7f8c8d; font-size: 0.9em;">Periode: <span id="val_periode">-</span></p>
-            </div>
-        </div>
+        <h2>SLIP GAJI - <span id="val_periode">-</span></h2>
+        <p>Nama: <span id="val_nama_karyawan"></span> | ID: <span id="val_id_karyawan"></span></p>
 
-        <div class="info-section">
-            <div class="info-row"><span class="label">ID Karyawan</span><span class="value">: <span id="val_id_karyawan">-</span></span></div>
-            <div class="info-row"><span class="label">Nama Lengkap</span><span class="value">: <span id="val_nama_karyawan">-</span></span></div>
-            <div class="info-row"><span class="label">Jabatan</span><span class="value">: <span id="val_jabatan">-</span></span></div>
-            <div class="info-row"><span class="label">Jenis Pajak</span><span class="value">: <span id="val_jenis_pajak">-</span></span></div>
-        </div>
-
-        <h2 style="color: #27ae60;">Penerimaan</h2>
+        <h3>Penerimaan</h3>
         <table>
-            <thead><tr><th>Keterangan</th><th style="text-align: right; width: 40%;">Nominal (Rp)</th></tr></thead>
+            <thead><tr><th>Keterangan</th><th>Nominal</th></tr></thead>
             <tbody id="val_list_pendapatan"></tbody>
-            <tbody><tr class="subtotal-row"><td>Total Penerimaan</td><td class="amount" id="val_total_pendapatan" style="color: #27ae60;">0</td></tr></tbody>
+            <tr class="total"><td>Total Penerimaan</td><td class="amount" id="val_total_pendapatan"></td></tr>
         </table>
 
-        <h2 style="color: #c0392b;">Potongan</h2>
+        <h3>Potongan</h3>
         <table>
-            <thead><tr><th>Keterangan</th><th style="text-align: right; width: 40%;">Nominal (Rp)</th></tr></thead>
+            <thead><tr><th>Keterangan</th><th>Nominal</th></tr></thead>
             <tbody id="val_list_potongan"></tbody>
-            <tbody><tr class="subtotal-row"><td>Total Potongan</td><td class="amount" id="val_total_potongan" style="color: #c0392b;">0</td></tr></tbody>
+            <tr class="total"><td>Total Potongan</td><td class="amount" id="val_total_potongan"></td></tr>
         </table>
 
-        <div class="summary-box">
-            <div class="summary-row">
-                <span class="summary-label">TOTAL GAJI (NETTO)</span>
-                <span class="summary-value" id="val_gaji_bersih">0</span>
-            </div>
-            <div class="terbilang-box">
-                <strong>Terbilang: </strong> <span id="val_terbilang" style="text-transform: capitalize;">-</span>
-            </div>
-        </div>
+        <p><strong>GAJI BERSIH: <span id="val_gaji_bersih"></span></strong></p>
+        <p><i>Terbilang: <span id="val_terbilang"></span></i></p>
     </div>
-<script>
-    // 1. Fungsi Utility
-    function cleanNumber(str) {
-        if (!str) return 0;
-        return parseInt(str.toString().replace(/[^0-9-]/g, '')) || 0;
-    }
 
-    function formatRupiah(angka) {
-        return new Intl.NumberFormat('id-ID').format(angka);
-    }
-
-    function penyebut(nilai) {
-        var huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
-        if (nilai < 12) return " " + huruf[nilai];
-        if (nilai < 20) return penyebut(nilai - 10) + " belas";
-        if (nilai < 100) return penyebut(Math.floor(nilai / 10)) + " puluh" + penyebut(nilai % 10);
-        if (nilai < 200) return " seratus" + penyebut(nilai - 100);
-        if (nilai < 1000) return penyebut(Math.floor(nilai / 100)) + " ratus" + penyebut(nilai % 100);
-        if (nilai < 2000) return " seribu" + penyebut(nilai - 1000);
-        if (nilai < 1000000) return penyebut(Math.floor(nilai / 1000)) + " ribu" + penyebut(nilai % 1000);
-        if (nilai < 1000000000) return penyebut(Math.floor(nilai / 1000000)) + " juta" + penyebut(nilai % 1000000);
-        return penyebut(Math.floor(nilai / 1000000000)) + " miliar" + penyebut(nilai % 1000000000);
-    }
-
-    function terbilang(nilai) {
-        if (nilai === 0) return "Nol Rupiah";
-        let hasil = penyebut(Math.abs(nilai));
-        return (nilai < 0 ? "Minus " : "") + hasil.trim() + " Rupiah";
-    }
-
-    // 2. Eksekusi Utama
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-
-        // Header
-        const fields = ['periode', 'id_karyawan', 'nama_karyawan', 'jabatan', 'jenis_pajak'];
-        fields.forEach(f => {
-            const el = document.getElementById('val_'+f);
-            if(el && urlParams.has(f)) el.innerText = decodeURIComponent(urlParams.get(f));
-        });
-
-        // Totals
-        ['total_pendapatan', 'total_potongan', 'gaji_bersih'].forEach(f => {
-            const el = document.getElementById('val_'+f);
-            if(el && urlParams.has(f)) el.innerText = formatRupiah(cleanNumber(urlParams.get(f)));
-        });
-
-        // Tabel List
-        function renderTable(param, targetId, isPotongan) {
-            const tbody = document.getElementById(targetId);
-            if (!tbody || !urlParams.has(param)) return;
-            
-            let data = decodeURIComponent(urlParams.get(param));
-            let rows = data.split(',');
-            let html = '';
-            
-            rows.forEach(r => {
-                let parts = r.split('|');
-                if(parts.length >= 2) {
-                    let ket = parts[0].trim();
-                    let nominal = cleanNumber(parts[1]);
-                    html += `<tr><td>${ket}</td><td class="amount">${isPotongan ? '('+formatRupiah(nominal)+')' : formatRupiah(nominal)}</td></tr>`;
-                }
-            });
-            tbody.innerHTML = html;
+    <script>
+        function formatRupiah(n) { return new Intl.NumberFormat('id-ID').format(n); }
+        function clean(s) { return parseInt(s.toString().replace(/[^0-9]/g, '')) || 0; }
+        
+        // Fungsi Terbilang sederhana
+        function terbilang(n) {
+            const b = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+            if (n < 12) return " " + b[n];
+            if (n < 20) return terbilang(n - 10) + " belas";
+            if (n < 100) return terbilang(Math.floor(n / 10)) + " puluh" + terbilang(n % 10);
+            if (n < 200) return " seratus" + terbilang(n - 100);
+            if (n < 1000) return terbilang(Math.floor(n / 100)) + " ratus" + terbilang(n % 100);
+            if (n < 1000000) return terbilang(Math.floor(n / 1000)) + " ribu" + terbilang(n % 1000);
+            return terbilang(Math.floor(n / 1000000)) + " juta" + terbilang(n % 1000000);
         }
 
-        renderTable('list_pendapatan', 'val_list_pendapatan', false);
-        renderTable('list_potongan', 'val_list_potongan', true);
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Isi header
+            document.getElementById('val_periode').innerText = params.get('periode');
+            document.getElementById('val_nama_karyawan').innerText = params.get('nama_karyawan');
+            document.getElementById('val_id_karyawan').innerText = params.get('id_karyawan');
+            
+            // Isi total
+            document.getElementById('val_total_pendapatan').innerText = formatRupiah(clean(params.get('total_pendapatan')));
+            document.getElementById('val_total_potongan').innerText = formatRupiah(clean(params.get('total_potongan')));
+            document.getElementById('val_gaji_bersih').innerText = formatRupiah(clean(params.get('gaji_bersih')));
+            document.getElementById('val_terbilang').innerText = terbilang(clean(params.get('gaji_bersih'))) + " Rupiah";
 
-        // Terbilang
-        const terbilangEl = document.getElementById('val_terbilang');
-        if(terbilangEl && urlParams.has('gaji_bersih')) {
-            terbilangEl.innerText = terbilang(cleanNumber(urlParams.get('gaji_bersih')));
-        }
-    };
-</script>
+            // Fungsi render tabel yang lebih stabil
+            function render(p, id) {
+                if(!params.has(p)) return;
+                let rows = decodeURIComponent(params.get(p)).split(',');
+                let html = '';
+                rows.forEach(r => {
+                    let c = r.split('|');
+                    if(c.length >= 2) html += `<tr><td>${c[0]}</td><td class="amount">${formatRupiah(clean(c[1]))}</td></tr>`;
+                });
+                document.getElementById(id).innerHTML = html;
+            }
+
+            render('list_pendapatan', 'val_list_pendapatan');
+            render('list_potongan', 'val_list_potongan');
+        };
+    </script>
 </body>
 </html>
