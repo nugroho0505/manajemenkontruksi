@@ -4,43 +4,89 @@
     <meta charset="UTF-8">
     <title>Slip Gaji Karyawan</title>
     <style>
+        /* 1. Pengaturan Cetak A5 */
         @page { size: A5 portrait; margin: 10mm; }
-        body { font-family: sans-serif; font-size: 12px; background: #eee; }
-        .a5-container { max-width: 148mm; margin: 0 auto; background: #fff; padding: 10mm; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
-        .amount { text-align: right; font-family: monospace; }
-        .total { font-weight: bold; background: #f4f4f4; }
+        
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        
+        /* 2. Kontainer agar di layar terlihat seperti kertas */
+        .a5-container {
+            max-width: 148mm;
+            min-height: 210mm;
+            margin: 0 auto;
+            background: #fff;
+            padding: 10mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* 3. Header & Logo */
+        .header { display: flex; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+        .logo-img { max-width: 80px; margin-right: 15px; }
+        .header-text { flex-grow: 1; text-align: right; }
+        .header-text h1 { margin: 0; font-size: 1.5em; text-transform: uppercase; }
+
+        /* 4. Info & Tabel */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th { background: #333; color: #fff; padding: 5px; font-size: 0.85em; text-align: left; }
+        td { padding: 5px; border-bottom: 1px solid #ddd; font-size: 0.85em; }
+        .amount { text-align: right; font-family: monospace; font-weight: bold; }
+        
+        /* 5. Summary */
+        .total-box { background: #eee; padding: 10px; border-radius: 5px; }
+        .netto { display: flex; justify-content: space-between; font-weight: bold; color: #27ae60; font-size: 1.1em; }
+        .terbilang { font-style: italic; font-size: 0.85em; margin-top: 5px; border-top: 1px solid #ccc; pt: 5px; }
+
+        @media print { body { background: none; padding: 0; } .a5-container { box-shadow: none; } }
     </style>
 </head>
 <body>
+
     <div class="a5-container">
-        <h2>SLIP GAJI - <span id="val_periode">-</span></h2>
-        <p>Nama: <span id="val_nama_karyawan"></span> | ID: <span id="val_id_karyawan"></span></p>
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="logo-img">
+            <div class="header-text">
+                <h1>SLIP GAJI</h1>
+                <p style="margin:0; font-size: 0.9em;">Periode: <span id="val_periode">-</span></p>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div><strong>ID:</strong> <span id="val_id_karyawan">-</span></div>
+            <div><strong>Jabatan:</strong> <span id="val_jabatan">-</span></div>
+            <div><strong>Nama:</strong> <span id="val_nama_karyawan">-</span></div>
+            <div><strong>Pajak:</strong> <span id="val_jenis_pajak">-</span></div>
+        </div>
 
         <h3>Penerimaan</h3>
         <table>
-            <thead><tr><th>Keterangan</th><th>Nominal</th></tr></thead>
+            <thead><tr><th>Keterangan</th><th class="amount">Nominal</th></tr></thead>
             <tbody id="val_list_pendapatan"></tbody>
-            <tr class="total"><td>Total Penerimaan</td><td class="amount" id="val_total_pendapatan"></td></tr>
+            <tr style="background:#f4f4f4"><td><strong>Total Penerimaan</strong></td><td class="amount" id="val_total_pendapatan"></td></tr>
         </table>
 
         <h3>Potongan</h3>
         <table>
-            <thead><tr><th>Keterangan</th><th>Nominal</th></tr></thead>
+            <thead><tr><th>Keterangan</th><th class="amount">Nominal</th></tr></thead>
             <tbody id="val_list_potongan"></tbody>
-            <tr class="total"><td>Total Potongan</td><td class="amount" id="val_total_potongan"></td></tr>
+            <tr style="background:#f4f4f4"><td><strong>Total Potongan</strong></td><td class="amount" id="val_total_potongan"></td></tr>
         </table>
 
-        <p><strong>GAJI BERSIH: <span id="val_gaji_bersih"></span></strong></p>
-        <p><i>Terbilang: <span id="val_terbilang"></span></i></p>
+        <div class="total-box">
+            <div class="netto">
+                <span>GAJI BERSIH</span>
+                <span id="val_gaji_bersih"></span>
+            </div>
+            <div class="terbilang" id="val_terbilang"></div>
+        </div>
     </div>
 
     <script>
+        // Fungsi dasar yang sudah teruji
         function formatRupiah(n) { return new Intl.NumberFormat('id-ID').format(n); }
         function clean(s) { return parseInt(s.toString().replace(/[^0-9]/g, '')) || 0; }
         
-        // Fungsi Terbilang sederhana
         function terbilang(n) {
             const b = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
             if (n < 12) return " " + b[n];
@@ -55,28 +101,29 @@
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             
-            // Isi header
-            document.getElementById('val_periode').innerText = params.get('periode');
-            document.getElementById('val_nama_karyawan').innerText = params.get('nama_karyawan');
-            document.getElementById('val_id_karyawan').innerText = params.get('id_karyawan');
-            
-            // Isi total
-            document.getElementById('val_total_pendapatan').innerText = formatRupiah(clean(params.get('total_pendapatan')));
-            document.getElementById('val_total_potongan').innerText = formatRupiah(clean(params.get('total_potongan')));
-            document.getElementById('val_gaji_bersih').innerText = formatRupiah(clean(params.get('gaji_bersih')));
+            // Set data teks
+            ['periode','id_karyawan','nama_karyawan','jabatan','jenis_pajak'].forEach(id => {
+                document.getElementById('val_'+id).innerText = params.get(id) || '-';
+            });
+
+            // Set angka
+            ['total_pendapatan','total_potongan','gaji_bersih'].forEach(id => {
+                document.getElementById('val_'+id).innerText = formatRupiah(clean(params.get(id)));
+            });
+
+            // Terbilang
             document.getElementById('val_terbilang').innerText = terbilang(clean(params.get('gaji_bersih'))) + " Rupiah";
 
-            // Fungsi render tabel yang lebih stabil
-            function render(p, id) {
+            // Render detail tabel
+            const render = (p, id) => {
                 if(!params.has(p)) return;
-                let rows = decodeURIComponent(params.get(p)).split(',');
                 let html = '';
-                rows.forEach(r => {
+                decodeURIComponent(params.get(p)).replace(/\s*,\s*/g, ',').split(',').forEach(r => {
                     let c = r.split('|');
                     if(c.length >= 2) html += `<tr><td>${c[0]}</td><td class="amount">${formatRupiah(clean(c[1]))}</td></tr>`;
                 });
                 document.getElementById(id).innerHTML = html;
-            }
+            };
 
             render('list_pendapatan', 'val_list_pendapatan');
             render('list_potongan', 'val_list_potongan');
