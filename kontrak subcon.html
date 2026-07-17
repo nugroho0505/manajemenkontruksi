@@ -57,52 +57,62 @@
             <div class="terbilang-box" id="val_terbilang">-</div>
         </div>
     </div>
+<script>
+    function fmt(n) { 
+        // Memastikan input adalah angka murni
+        let val = parseFloat(n);
+        return isNaN(val) ? "0" : new Intl.NumberFormat('id-ID').format(val); 
+    }
+    
+    function terbilang(n) {
+        const b = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+        if (n < 12) return " " + b[n];
+        if (n < 20) return terbilang(n - 10) + " belas";
+        if (n < 100) return terbilang(Math.floor(n / 10)) + " puluh" + terbilang(n % 10);
+        if (n < 200) return " seratus" + terbilang(n - 100);
+        if (n < 1000) return terbilang(Math.floor(n / 100)) + " ratus" + terbilang(n % 100);
+        if (n < 1000000) return terbilang(Math.floor(n / 1000)) + " ribu" + terbilang(n % 1000);
+        return terbilang(Math.floor(n / 1000000)) + " juta" + terbilang(n % 1000000);
+    }
 
-    <script>
-        function fmt(n) { return new Intl.NumberFormat('id-ID').format(n || 0); }
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
         
-        function terbilang(n) {
-            const b = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
-            if (n < 12) return " " + b[n];
-            if (n < 20) return terbilang(n - 10) + " belas";
-            if (n < 100) return terbilang(Math.floor(n / 10)) + " puluh" + terbilang(n % 10);
-            if (n < 200) return " seratus" + terbilang(n - 100);
-            if (n < 1000) return terbilang(Math.floor(n / 100)) + " ratus" + terbilang(n % 100);
-            if (n < 1000000) return terbilang(Math.floor(n / 1000)) + " ribu" + terbilang(n % 1000);
-            return terbilang(Math.floor(n / 1000000)) + " juta" + terbilang(n % 1000000);
+        // Debug: Cetak ke Console F12 untuk melihat apa yang dikirim AppSheet
+        console.log("URL Parameters:", Object.fromEntries(params.entries()));
+
+        // Set teks biasa
+        ['proyek', 'no_kontrak', 'nama_subcon', 'jenis_pajak'].forEach(id => {
+            let val = params.get(id);
+            document.getElementById('val_'+id).innerText = val ? decodeURIComponent(val) : '-';
+        });
+
+        // Set angka
+        ['nilai_bruto', 'nilai_pph', 'nilai_bersih', 'sisa_pembayaran'].forEach(id => {
+            let rawVal = params.get(id);
+            console.log(id + ": " + rawVal); // Debug angka
+            document.getElementById('val_'+id).innerText = fmt(rawVal);
+        });
+
+        // Terbilang
+        let sisa = parseInt(params.get('sisa_pembayaran') || 0);
+        document.getElementById('val_terbilang').innerText = terbilang(sisa) + " Rupiah";
+
+        // Riwayat Pembayaran
+        let riwayat = decodeURIComponent(params.get('riwayat_pembayaran') || "");
+        let tbody = document.getElementById('val_riwayat_pembayaran');
+        if (riwayat && riwayat.trim() !== "") {
+            tbody.innerHTML = ""; // Bersihkan loading
+            riwayat.split(',').forEach(r => {
+                let c = r.split('|');
+                if(c.length === 3) {
+                    tbody.innerHTML += `<tr><td>${c[0]}</td><td>${c[1]}</td><td class="amount">${fmt(c[2])}</td></tr>`;
+                }
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Belum ada riwayat pembayaran</td></tr>';
         }
-
-        window.onload = () => {
-            const params = new URLSearchParams(window.location.search);
-            
-            // Set teks biasa
-            ['proyek', 'no_kontrak', 'nama_subcon', 'jenis_pajak'].forEach(id => {
-                document.getElementById('val_'+id).innerText = decodeURIComponent(params.get(id) || '-');
-            });
-
-            // Set angka (langsung dari parameter)
-            ['nilai_bruto', 'nilai_pph', 'nilai_bersih', 'sisa_pembayaran'].forEach(id => {
-                document.getElementById('val_'+id).innerText = fmt(params.get(id));
-            });
-
-            // Terbilang
-            let sisa = parseInt(params.get('sisa_pembayaran') || 0);
-            document.getElementById('val_terbilang').innerText = terbilang(sisa) + " Rupiah";
-
-            // Riwayat Pembayaran (Safe mode)
-            let riwayat = decodeURIComponent(params.get('riwayat_pembayaran') || "");
-            let tbody = document.getElementById('val_riwayat_pembayaran');
-            if (riwayat && riwayat.trim() !== "") {
-                riwayat.split(',').forEach(r => {
-                    let c = r.split('|');
-                    if(c.length === 3) {
-                        tbody.innerHTML += `<tr><td>${c[0]}</td><td>${c[1]}</td><td class="amount">${fmt(c[2])}</td></tr>`;
-                    }
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Belum ada riwayat pembayaran</td></tr>';
-            }
-        };
-    </script>
+    };
+</script>
 </body>
 </html>
