@@ -4,327 +4,105 @@
     <meta charset="UTF-8">
     <title>Laporan Kontrak Subcon</title>
     <style>
-        /* 1. Pengaturan khusus saat dicetak (Print) */
-        @page {
-            size: A4;
-            margin: 20mm;
-        }
-
-        /* 2. Pengaturan tampilan layar browser (HP/Monitor) */
-        body {
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            padding: 20px; /* Memberi jarak luar di layar */
-            background-color: #e9ecef; /* Latar belakang luar kertas */
-            color: #2c3e50;
-            line-height: 1.6;
-        }
-
-        *, *::before, *::after { box-sizing: border-box; }
-        
-        /* 3. Pembungkus simulasi kertas A4 */
-        .a4-container {
-            max-width: 210mm; /* Lebar standar A4 */
-            margin: 0 auto; /* Posisi di tengah layar */
-            background-color: #fdfbf7; /* Warna kertas */
-            padding: 20mm; /* Jarak teks ke tepi layar (margin visual) */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* Efek bayangan kertas */
-        }
-
-        /* 4. Saat masuk menu Print, hilangkan bayangan dan ikuti @page */
-        @media print {
-            body {
-                background-color: #fdfbf7;
-                padding: 0;
-            }
-            .a4-container {
-                max-width: 100%;
-                margin: 0;
-                padding: 0;
-                box-shadow: none;
-            }
-        }
-        
-        /* --- CSS KOMPONEN KONTEN --- */
-        .header {
-            display: table;
-            width: 100%;
-            border-bottom: 3px solid #34495e;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-        .header-left {
-            display: table-cell;
-            width: 50%;
-            vertical-align: middle;
-        }
-        .header-right {
-            display: table-cell;
-            width: 50%;
-            text-align: right;
-            vertical-align: middle;
-        }
-        .logo-placeholder {
-            width: 120px;
-            height: 60px;
-            background-color: #7f8c8d;
-            display: table;
-            text-align: center;
-            color: #fff;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        .logo-text {
-            display: table-cell;
-            vertical-align: middle;
-        }
-        
-        .info-section {
-            margin-bottom: 25px;
-            background: #ffffff;
-            padding: 20px;
-            border: 1px solid #bdc3c7;
-            border-left: 5px solid #34495e;
-            border-radius: 4px;
-        }
-        .info-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 8px;
-        }
-        .label {
-            display: table-cell;
-            width: 30%;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .value {
-            display: table-cell;
-            width: 70%;
-        }
-
-        h2 {
-            color: #2c3e50;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 5px;
-            margin-top: 30px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            background: #fff;
-        }
-        th {
-            background-color: #34495e;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-size: 0.95em;
-        }
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #ecf0f1;
-            font-size: 0.95em;
-        }
-        .amount {
-            text-align: right;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-        }
-        tr.highlight td {
-            background-color: #f9f9f9;
-            font-weight: bold;
-        }
-        
-        .summary-box {
-            margin-top: 30px;
-            padding: 20px;
-            background: #ecf0f1;
-            border-radius: 4px;
-        }
-        .summary-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .summary-label {
-            display: table-cell;
-            width: 60%;
-            font-weight: bold;
-            text-align: right;
-            padding-right: 20px;
-        }
-        .summary-value {
-            display: table-cell;
-            width: 40%;
-            text-align: right;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        .total-row {
-            border-top: 2px solid #bdc3c7;
-            padding-top: 10px;
-            font-size: 1.2em;
-            color: #c0392b;
-        }
-        .terbilang-box {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-left: 4px solid #f39c12;
-            font-style: italic;
-            color: #333;
-        }
+        @page { size: A4; margin: 20mm; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 20px; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 20mm; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 297mm; }
+        .header { display: flex; align-items: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
+        .logo-img { max-width: 120px; margin-right: 20px; }
+        .header-text { flex-grow: 1; text-align: right; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #34495e; color: #fff; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-weight: bold; }
+        .summary-box { margin-top: 30px; padding: 20px; background: #ecf0f1; border-radius: 4px; }
+        .total-row { display: flex; justify-content: space-between; font-size: 1.2em; font-weight: bold; color: #c0392b; }
+        .terbilang-box { margin-top: 15px; padding: 15px; background: #fff; border-left: 4px solid #f39c12; font-style: italic; }
     </style>
 </head>
 <body>
-
-    <!-- Bungkus seluruh konten ke dalam a4-container -->
     <div class="a4-container">
-        
         <div class="header">
-            <div class="header-left">
-                 <img src="logo.png" alt="Logo Perusahaan" style="max-width: 120px; display: block;">                </div>
-            </div>
-            <div class="header-right">
+            <img src="logo.png" alt="Logo" class="logo-img">
+            <div class="header-text">
                 <h1 style="margin:0; color:#34495e;">LAPORAN KONTRAK</h1>
-                <p style="margin:5px 0 0 0; color:#7f8c8d;">Status Keuangan Subkontraktor</p>
+                <p id="val_no_kontrak" style="margin:0; font-weight:bold;"></p>
             </div>
         </div>
 
-        <div class="info-section">
-            <div class="info-row"><span class="label">Proyek</span><span class="value">: <span id="val_proyek">-</span></span></div>
-            <div class="info-row"><span class="label">No Kontrak</span><span class="value">: <span id="val_no_kontrak">-</span></span></div>
-            <div class="info-row"><span class="label">Nama Subcon</span><span class="value">: <span id="val_nama_subcon">-</span></span></div>
-            <div class="info-row"><span class="label">Jenis Pajak</span><span class="value">: <span id="val_jenis_pajak">-</span></span></div>
+        <div class="info-grid">
+            <div><strong>Proyek:</strong> <span id="val_proyek">-</span></div>
+            <div><strong>Subcon:</strong> <span id="val_nama_subcon">-</span></div>
+            <div><strong>Jenis Pajak:</strong> <span id="val_jenis_pajak">-</span></div>
         </div>
 
-        <h2>Rincian Nilai Kontrak</h2>
+        <h3>Rincian Nilai Kontrak</h3>
         <table>
-            <thead>
-                <tr>
-                    <th>Deskripsi</th>
-                    <th style="text-align: right;">Jumlah (Rp)</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Deskripsi</th><th class="amount">Jumlah (Rp)</th></tr></thead>
             <tbody>
-                <tr>
-                    <td>Nilai Kontrak Bruto (DPP)</td>
-                    <td class="amount" id="val_nilai_bruto">0</td>
-                </tr>
-                <tr>
-                    <td>Potongan Pajak Penghasilan (PPh)</td>
-                    <td class="amount" style="color: #c0392b;" id="val_nilai_pph">0</td>
-                </tr>
-                <tr class="highlight">
-                    <td>Nilai Kontrak Bersih (Setelah Pajak)</td>
-                    <td class="amount" id="val_nilai_bersih">0</td>
-                </tr>
+                <tr><td>Nilai Kontrak Bruto (DPP)</td><td class="amount" id="val_nilai_bruto">0</td></tr>
+                <tr><td>Potongan Pajak (PPh)</td><td class="amount" id="val_nilai_pph">0</td></tr>
+                <tr style="background:#f9f9f9"><td><strong>Nilai Kontrak Bersih</strong></td><td class="amount" id="val_nilai_bersih">0</td></tr>
             </tbody>
         </table>
 
-        <h2>Riwayat Pembayaran</h2>
+        <h3>Riwayat Pembayaran</h3>
         <table>
-            <thead>
-                <tr>
-                    <th>Tanggal</th>
-                    <th>Keterangan</th>
-                    <th style="text-align: right;">Jumlah Dibayar (Rp)</th>
-                </tr>
-            </thead>
-            <tbody id="val_riwayat_pembayaran">
-                <tr>
-                    <td colspan="3" style="text-align: center; font-style: italic;">Memuat data...</td>
-                </tr>
-            </tbody>
+            <thead><tr><th>Tanggal</th><th>Keterangan</th><th class="amount">Jumlah</th></tr></thead>
+            <tbody id="val_riwayat_pembayaran"></tbody>
         </table>
 
         <div class="summary-box">
-            <div class="summary-row">
-                <span class="summary-label">Nilai Kontrak Setelah Pajak :</span>
-                <span class="summary-value" id="val_sum_bersih">0</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Total Telah Dibayar :</span>
-                <span class="summary-value" id="val_total_dibayar">0</span>
-            </div>
-            <div class="summary-row total-row">
-                <span class="summary-label" style="color: #c0392b;">SISA PEMBAYARAN KONTRAK :</span>
-                <span class="summary-value" style="color: #c0392b;" id="val_sisa_pembayaran">0</span>
-            </div>
-            
-            <div class="terbilang-box">
-                <strong>Terbilang (Sisa Pembayaran): </strong> <span id="val_terbilang" style="text-transform: capitalize;">-</span>
-            </div>
+            <div class="total-row"><span>SISA PEMBAYARAN:</span> <span id="val_sisa_pembayaran">0</span></div>
+            <div class="terbilang-box" id="val_terbilang">-</div>
         </div>
+    </div>
 
-    </div> <!-- Penutup a4-container -->
-<script>
-    // Fungsi format ribuan otomatis
-    function formatRupiah(angka) {
-        return new Intl.NumberFormat('id-ID').format(angka);
-    }
-
-    // Fungsi Terbilang (Tetap di JS)
-    function penyebut(nilai) {
-        var huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
-        if (nilai < 12) return " " + huruf[nilai];
-        if (nilai < 20) return penyebut(nilai - 10) + " belas";
-        if (nilai < 100) return penyebut(Math.floor(nilai / 10)) + " puluh" + penyebut(nilai % 10);
-        if (nilai < 200) return " seratus" + penyebut(nilai - 100);
-        if (nilai < 1000) return penyebut(Math.floor(nilai / 100)) + " ratus" + penyebut(nilai % 100);
-        if (nilai < 2000) return " seribu" + penyebut(nilai - 1000);
-        if (nilai < 1000000) return penyebut(Math.floor(nilai / 1000)) + " ribu" + penyebut(nilai % 1000);
-        if (nilai < 1000000000) return penyebut(Math.floor(nilai / 1000000)) + " juta" + penyebut(nilai % 1000000);
-        return penyebut(Math.floor(nilai / 1000000000)) + " miliar" + penyebut(nilai % 1000000000);
-    }
-
-    function terbilang(nilai) {
-        if (nilai === 0) return "Nol Rupiah";
-        let hasil = penyebut(Math.abs(nilai));
-        return (nilai < 0 ? "Minus " : "") + hasil.trim() + " Rupiah";
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const urlParams = new URLSearchParams(window.location.search);
-
-        // A. Set teks biasa
-        ['proyek', 'no_kontrak', 'nama_subcon', 'jenis_pajak'].forEach(id => {
-            if(urlParams.has(id)) document.getElementById('val_'+id).innerText = decodeURIComponent(urlParams.get(id));
-        });
-
-        // B. Set angka (tanpa hitung, langsung dari AppSheet)
-        ['nilai_bruto', 'nilai_pph', 'nilai_bersih', 'total_dibayar', 'sisa_pembayaran'].forEach(id => {
-            if(urlParams.has(id)) {
-                let val = urlParams.get(id); // Ambil angka murni dari AppSheet
-                document.getElementById('val_'+id).innerText = formatRupiah(val);
-                
-                // Khusus untuk sisa_pembayaran, sekalian hitung terbilangnya
-                if(id === 'sisa_pembayaran') {
-                    document.getElementById('val_terbilang').innerText = terbilang(parseInt(val));
-                }
-            }
-        });
+    <script>
+        function fmt(n) { return new Intl.NumberFormat('id-ID').format(n || 0); }
         
-        // Update val_sum_bersih agar sama dengan nilai_bersih
-        if(urlParams.has('nilai_bersih')) document.getElementById('val_sum_bersih').innerText = formatRupiah(urlParams.get('nilai_bersih'));
-
-        // C. Render Tabel Riwayat
-        if (urlParams.has('riwayat_pembayaran')) {
-            let html = '';
-            decodeURIComponent(urlParams.get('riwayat_pembayaran')).split(',').forEach(r => {
-                let c = r.split('|');
-                if(c.length === 3) {
-                    html += `<tr><td>${c[0]}</td><td>${c[1]}</td><td class="amount">${formatRupiah(c[2])}</td></tr>`;
-                }
-            });
-            document.getElementById('val_riwayat_pembayaran').innerHTML = html;
+        function terbilang(n) {
+            const b = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+            if (n < 12) return " " + b[n];
+            if (n < 20) return terbilang(n - 10) + " belas";
+            if (n < 100) return terbilang(Math.floor(n / 10)) + " puluh" + terbilang(n % 10);
+            if (n < 200) return " seratus" + terbilang(n - 100);
+            if (n < 1000) return terbilang(Math.floor(n / 100)) + " ratus" + terbilang(n % 100);
+            if (n < 1000000) return terbilang(Math.floor(n / 1000)) + " ribu" + terbilang(n % 1000);
+            return terbilang(Math.floor(n / 1000000)) + " juta" + terbilang(n % 1000000);
         }
-    });
-</script>
+
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Set teks biasa
+            ['proyek', 'no_kontrak', 'nama_subcon', 'jenis_pajak'].forEach(id => {
+                document.getElementById('val_'+id).innerText = decodeURIComponent(params.get(id) || '-');
+            });
+
+            // Set angka (langsung dari parameter)
+            ['nilai_bruto', 'nilai_pph', 'nilai_bersih', 'sisa_pembayaran'].forEach(id => {
+                document.getElementById('val_'+id).innerText = fmt(params.get(id));
+            });
+
+            // Terbilang
+            let sisa = parseInt(params.get('sisa_pembayaran') || 0);
+            document.getElementById('val_terbilang').innerText = terbilang(sisa) + " Rupiah";
+
+            // Riwayat Pembayaran (Safe mode)
+            let riwayat = decodeURIComponent(params.get('riwayat_pembayaran') || "");
+            let tbody = document.getElementById('val_riwayat_pembayaran');
+            if (riwayat && riwayat.trim() !== "") {
+                riwayat.split(',').forEach(r => {
+                    let c = r.split('|');
+                    if(c.length === 3) {
+                        tbody.innerHTML += `<tr><td>${c[0]}</td><td>${c[1]}</td><td class="amount">${fmt(c[2])}</td></tr>`;
+                    }
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Belum ada riwayat pembayaran</td></tr>';
+            }
+        };
+    </script>
 </body>
 </html>
