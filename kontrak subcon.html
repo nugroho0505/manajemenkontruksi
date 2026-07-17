@@ -58,7 +58,7 @@
         </div>
     </div>
     
-    <script>
+        <script>
         // 1. FUNGSI FORMAT RUPIAH
         function fmt(n) { 
             let val = parseFloat(n);
@@ -82,7 +82,6 @@
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             
-            // Fungsi baca parameter (Case Insensitive: huruf besar/kecil tidak masalah)
             function getVal(key) {
                 for (let pair of params.entries()) {
                     if (pair[0].toLowerCase() === key.toLowerCase()) return pair[1];
@@ -90,13 +89,14 @@
                 return null;
             }
 
-            // Set teks biasa
-            document.getElementById('val_proyek').innerText = decodeURIComponent(getVal('proyek') || '-');
-            document.getElementById('val_nama_subcon').innerText = decodeURIComponent(getVal('nama_subcon') || '-');
-            document.getElementById('val_no_kontrak').innerText = decodeURIComponent(getVal('no_kontrak') || '-');
-            document.getElementById('val_jenis_pajak').innerText = decodeURIComponent(getVal('jenis_pajak') || '-');
+            // PERBAIKAN: Hapus fungsi decodeURIComponent agar script tidak "mati" 
+            // saat membaca simbol persen (%) dari AppSheet.
+            document.getElementById('val_proyek').innerText = getVal('proyek') || '-';
+            document.getElementById('val_nama_subcon').innerText = getVal('nama_subcon') || '-';
+            document.getElementById('val_no_kontrak').innerText = getVal('no_kontrak') || '-';
+            document.getElementById('val_jenis_pajak').innerText = getVal('jenis_pajak') || '-';
 
-            // Set angka dan kembalikan nilainya untuk dihitung terbilang
+            // Set angka
             const setNum = (id, keys) => {
                 let val = 0;
                 keys.forEach(k => { 
@@ -107,23 +107,21 @@
                 return parseInt(val) || 0;
             };
 
-            // Mengisi data tabel angka
             setNum('val_nilai_bruto', ['nilai_bruto']);
             setNum('val_nilai_pph', ['nilai_pph']);
             setNum('val_nilai_bersih', ['nilai_bersih']);
             
-            // Mengisi sisa pembayaran sekaligus menyimpan angkanya di variabel 'sisa'
             let sisa = setNum('val_sisa_pembayaran', ['sisa_pembayaran']);
             
-            // Render Terbilang dari variabel 'sisa'
+            // Render Terbilang
             document.getElementById('val_terbilang').innerText = (sisa > 0) ? terbilang(sisa) + " Rupiah" : "-";
 
-            // Render Riwayat Pembayaran
-            let riwayat = decodeURIComponent(getVal('riwayat_pembayaran') || "");
+            // Render Riwayat Pembayaran (juga tanpa decodeURIComponent)
+            let riwayat = getVal('riwayat_pembayaran') || "";
             let tbody = document.getElementById('val_riwayat_pembayaran');
             
             if (riwayat && riwayat.trim() !== "" && riwayat !== "null") {
-                tbody.innerHTML = ""; // Bersihkan pesan default
+                tbody.innerHTML = ""; 
                 riwayat.split(',').forEach(r => {
                     let c = r.split('|');
                     if(c.length === 3) {
