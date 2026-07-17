@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Laba Rugi Per Proyek</title>
+    <!-- Library untuk download PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Pengaturan Kertas A4 & Padding */
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 10mm; min-height: 297mm; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* HEADER AREA */
+        .report-header { text-align: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
+        .report-title { font-size: 22px; font-weight: bold; color: #2c3e50; margin: 0; }
+        .project-name { font-size: 16px; color: #7f8c8d; margin-top: 5px; font-weight: bold; text-transform: uppercase; }
+        
+        /* TABEL & LIST */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; }
+        th { background: #34495e; color: #fff; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-size: 13px; font-weight: bold; }
+        .section-header { background: #ecf0f1; font-weight: bold; padding: 10px 15px; margin-top: 20px; color: #34495e; border-left: 4px solid #34495e; }
+        
+        /* BOX TOTAL */
+        .total-box { text-align: right; font-weight: bold; font-size: 1.1em; padding: 12px 10px; border-top: 2px solid #34495e; margin-bottom: 15px; }
+        
+        /* BOX LABA RUGI AKHIR */
+        .laba-rugi-box { text-align: right; margin-top: 30px; padding: 20px; background: #f8f9fa; border: 2px solid #27ae60; border-radius: 6px; }
+        .laba-rugi-box h2 { margin: 0; font-size: 24px; color: #27ae60; }
+
+        /* POP-UP STYLING (Sama seperti Neraca & Buku Besar) */
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; display: none; }
+        #action-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; display: none; text-align: center; width: 280px; }
+        #action-popup h3 { margin-top: 0; color: #2c3e50; font-size: 18px; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; margin-bottom: 12px; padding: 12px; cursor: pointer; background: #34495e; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #2c3e50; }
+        .btn-close { background: #95a5a6; }
+        .btn-close:hover { background: #7f8c8d; }
+        
+        /* Tombol Mengapung jika Pop-up ditutup */
+        #floating-btn { position: fixed; bottom: 20px; right: 20px; background: #34495e; color: #fff; padding: 15px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9997; border: none; font-size: 20px; display: none; }
+
+        /* Sembunyikan elemen UI saat dicetak */
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Area Pop-up Menu -->
+    <div id="backdrop" class="no-print"></div>
+    <div id="action-popup" class="no-print">
+        <h3>Menu Laba Rugi Proyek</h3>
+        <button class="btn" onclick="window.print()">🖨️ Cetak Dokumen</button>
+        <button class="btn" onclick="downloadPDF()">💾 Download PDF</button>
+        <button class="btn" onclick="history.back()">⬅️ Kembali ke Aplikasi</button>
+        <button class="btn btn-close" onclick="closePopup()">Tutup Menu</button>
+    </div>
+    
+    <!-- Tombol Mengapung -->
+    <button id="floating-btn" class="no-print" onclick="openPopup()">⚙️</button>
+
+    <!-- Kertas A4 -->
+    <div class="a4-container">
+        
+        <!-- JUDUL & NAMA PROYEK -->
+        <div class="report-header">
+            <h1 class="report-title">LAPORAN LABA RUGI PER PROYEK</h1>
+            <div id="val_nama_proyek" class="project-name">-</div>
+        </div>
+        
+        <!-- LIST PENDAPATAN -->
+        <div class="section-header">>> PENDAPATAN PROYEK</div>
+        <table>
+            <tbody id="tbl_pendapatan"></tbody>
+        </table>
+        <div class="total-box">TOTAL PENDAPATAN: <span id="tot_pendapatan">0</span></div>
+
+        <!-- LIST BEBAN -->
+        <div class="section-header">>> BEBAN PROYEK</div>
+        <table>
+            <tbody id="tbl_beban"></tbody>
+        </table>
+        <div class="total-box">TOTAL BEBAN: <span id="tot_beban">0</span></div>
+
+        <!-- LABA RUGI AKHIR -->
+        <div class="laba-rugi-box" id="box_laba_rugi">
+            <h2 id="val_laba_rugi">LABA RUGI: Rp 0</h2>
+        </div>
+
+    </div>
+
+    <script>
+        // Fungsi Format Uang
+        function fmt(n) { return new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(parseFloat(n) || 0); }
+        
+        // Logika Pop-up
+        function openPopup() {
+            document.getElementById('backdrop').style.display = 'block';
+            document.getElementById('action-popup').style.display = 'block';
+            document.getElementById('floating-btn').style.display = 'none';
+        }
+        function closePopup() {
+            document.getElementById('backdrop').style.display = 'none';
+            document.getElementById('action-popup').style.display = 'none';
+            document.getElementById('floating-btn').style.display = 'block';
+        }
+
+        // Fungsi Download PDF
+        function downloadPDF() {
+            closePopup(); // Sembunyikan popup sebelum download
+            const el = document.querySelector('.a4-container');
+            html2pdf().set({
+                margin: 0,
+                filename: 'Laba_Rugi_Per_Proyek.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(() => {
+                openPopup(); // Munculkan lagi setelah selesai
+            });
+        }
+        
+        // Proses Render Data saat halaman di-load
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Nama Proyek
+            document.getElementById('val_nama_proyek').innerText = (params.get('nama_proyek') || "PROYEK TIDAK TERSEDIA").toUpperCase();
+
+            // Fungsi Render Tabel List
+            const render = (listId, tableId, totalId) => {
+                let total = 0;
+                let table = document.getElementById(tableId);
+                let data = params.get(listId) || "";
+                
+                if(data.trim() !== "") {
+                    data.split(',').forEach(r => {
+                        let parts = r.split('|');
+                        if(parts.length >= 2) {
+                            let nama = parts[0].trim();
+                            let nilai = parseFloat(parts[1]) || 0;
+                            total += nilai;
+                            table.innerHTML += `<tr><td>${nama}</td><td class="amount">${fmt(nilai)}</td></tr>`;
+                        }
+                    });
+                } else {
+                    table.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#999;">Tidak ada data</td></tr>`;
+                }
+                document.getElementById(totalId).innerText = fmt(total);
+                return total;
+            };
+
+            // Hitung Total Pendapatan & Beban
+            let totPendapatan = render('list_pendapatan', 'tbl_pendapatan', 'tot_pendapatan');
+            let totBeban = render('list_beban', 'tbl_beban', 'tot_beban');
+            
+            // Hitung Laba Rugi
+            let labaRugi = totPendapatan - totBeban;
+            let elLabaRugi = document.getElementById('val_laba_rugi');
+            let boxLabaRugi = document.getElementById('box_laba_rugi');
+            
+            elLabaRugi.innerText = "LABA RUGI: " + fmt(labaRugi);
+            
+            // Ubah warna jika Rugi
+            if (labaRugi < 0) {
+                elLabaRugi.style.color = "#c0392b"; // Merah
+                boxLabaRugi.style.borderColor = "#c0392b";
+            } else {
+                elLabaRugi.style.color = "#27ae60"; // Hijau
+                boxLabaRugi.style.borderColor = "#27ae60";
+            }
+
+            // Munculkan Pop-up secara otomatis setelah 500ms
+            setTimeout(() => {
+                openPopup();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
