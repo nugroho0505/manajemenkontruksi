@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Neraca Proyek</title>
+    <!-- Library untuk download PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Pengaturan Kertas A4 & Padding 1mm */
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 10mm; min-height: 297mm; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* Tipografi & Header */
+        .header { text-align: center; border-bottom: 3px solid #34495e; padding-bottom: 10px; margin-bottom: 20px; }
+        .section-title { font-size: 14px; font-weight: bold; color: #fff; background: #34495e; padding: 8px 15px; margin-top: 20px; border-radius: 4px; }
+        
+        /* Layout Grid Neraca */
+        .neraca-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 15px; }
+        th { background: #ecf0f1; padding: 8px; text-align: left; }
+        td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-weight: bold; font-size: 14px; }
+        
+        /* Warna Baris Total */
+        .row-total-aset { background: #2980b9; color: #fff; font-weight: bold; }
+        .row-total-kewajiban { background: #e67e22; color: #fff; font-weight: bold; }
+        .row-total-modal { background: #8e44ad; color: #fff; font-weight: bold; }
+
+        /* Styling Status Balance */
+        .balance-box { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 2px solid #34495e; font-size: 1.2em; font-weight: bold; margin-top: 5px; border-radius: 4px; background: #f8f9fa; }
+        
+        /* POP-UP STYLING */
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; display: none; }
+        #action-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; display: none; text-align: center; width: 280px; }
+        #action-popup h3 { margin-top: 0; color: #2c3e50; font-size: 18px; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; margin-bottom: 12px; padding: 12px; cursor: pointer; background: #34495e; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #2c3e50; }
+        .btn-close { background: #95a5a6; }
+        .btn-close:hover { background: #7f8c8d; }
+        
+        /* Tombol Mengapung (Jika Pop-up ditutup) */
+        #floating-btn { position: fixed; bottom: 20px; right: 20px; background: #34495e; color: #fff; padding: 15px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9997; border: none; font-size: 20px; display: none; }
+
+        /* Sembunyikan elemen UI saat dicetak */
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Area Pop-up Menu -->
+    <div id="backdrop" class="no-print"></div>
+    <div id="action-popup" class="no-print">
+        <h3>Menu Laporan Neraca</h3>
+        <button class="btn" onclick="window.print()">🖨️ Cetak Dokumen</button>
+        <button class="btn" onclick="downloadPDF()">💾 Download PDF</button>
+        <button class="btn" onclick="history.back()">⬅️ Kembali ke Aplikasi</button>
+        <button class="btn btn-close" onclick="closePopup()">Tutup Menu</button>
+    </div>
+    
+    <!-- Tombol Mengapung -->
+    <button id="floating-btn" class="no-print" onclick="openPopup()">⚙️</button>
+
+    <!-- Kertas A4 -->
+    <div class="a4-container">
+        
+        <div class="header">
+            <h1 style="margin:0; font-size: 24px; color: #2c3e50;">NERACA POSISI KEUANGAN</h1>
+            <p id="val_nama_proyek" style="font-weight:bold; color: #7f8c8d; font-size: 16px; text-transform: uppercase; margin: 5px 0 0 0;">-</p>
+        </div>
+
+        <div class="neraca-grid">
+            <!-- SISI KIRI: ASET -->
+            <div>
+                <div class="section-title">ASET (HARTA)</div>
+                <table>
+                    <tbody id="val_aset"></tbody>
+                    <tr class="row-total-aset">
+                        <td>TOTAL ASET</td>
+                        <td class="amount" id="sum_aset">0</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- SISI KANAN: KEWAJIBAN & MODAL -->
+            <div>
+                <div class="section-title">KEWAJIBAN (HUTANG)</div>
+                <table>
+                    <tbody id="val_kewajiban"></tbody>
+                    <tr class="row-total-kewajiban">
+                        <td>TOTAL KEWAJIBAN</td>
+                        <td class="amount" id="sum_kewajiban">0</td>
+                    </tr>
+                </table>
+
+                <div class="section-title">MODAL (EKUITAS)</div>
+                <table>
+                    <tbody id="val_modal"></tbody>
+                    <tr class="row-total-modal">
+                        <td>TOTAL MODAL</td>
+                        <td class="amount" id="sum_modal">0</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- STATUS BALANCE KESELURUHAN -->
+        <div class="section-title" style="margin-top:20px; background:#2c3e50;">STATUS KESEIMBANGAN (BALANCE CHECK)</div>
+        <div class="balance-box">
+            <span>TOTAL ASET:<br><span id="final_sum_aset" style="color: #2980b9; font-size: 1.2em;">Rp 0</span></span>
+            
+            <span id="balance_status" style="font-size: 1.5em; padding: 10px 20px; border-radius: 8px;">MENGECEK...</span>
+            
+            <span style="text-align: right;">TOTAL KEWAJIBAN + MODAL:<br><span id="final_sum_all" style="color: #8e44ad; font-size: 1.2em;">Rp 0</span></span>
+        </div>
+
+    </div>
+
+    <script>
+        // Fungsi Format Uang
+        function fmt(n) { return new Intl.NumberFormat('id-ID').format(parseFloat(n)||0); }
+        
+        // Logika Pop-up
+        function openPopup() {
+            document.getElementById('backdrop').style.display = 'block';
+            document.getElementById('action-popup').style.display = 'block';
+            document.getElementById('floating-btn').style.display = 'none';
+        }
+        function closePopup() {
+            document.getElementById('backdrop').style.display = 'none';
+            document.getElementById('action-popup').style.display = 'none';
+            document.getElementById('floating-btn').style.display = 'block';
+        }
+
+        // Fungsi Download PDF
+        function downloadPDF() {
+            closePopup(); // Sembunyikan popup sebelum download
+            const el = document.querySelector('.a4-container');
+            html2pdf().set({
+                margin: 0,
+                filename: 'Neraca_Proyek.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(() => {
+                openPopup(); // Munculkan lagi setelah selesai
+            });
+        }
+        
+        // Proses Render Data saat halaman di-load
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const getL = (key) => (params.get(key) || "").split(',');
+            
+            // Tulis Nama Proyek
+            document.getElementById('val_nama_proyek').innerText = params.get('nama_proyek') || "NAMA PROYEK TIDAK TERSEDIA";
+            
+            // Fungsi render tabel
+            const render = (id, targetId, sumId) => {
+                let sum = 0;
+                let tbody = document.getElementById(targetId);
+                let data = getL(id);
+                
+                if (data.length > 0 && data[0] !== "") {
+                    data.forEach(r => {
+                        let parts = r.split('|');
+                        if(parts.length >= 2) {
+                            let nama = parts[0].trim();
+                            let nilai = parseFloat(parts[1]) || 0;
+                            sum += nilai;
+                            tbody.innerHTML += `<tr><td>${nama}</td><td class="amount">${fmt(nilai)}</td></tr>`;
+                        }
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#999;">Tidak ada data</td></tr>`;
+                }
+                document.getElementById(sumId).innerText = fmt(sum);
+                return sum;
+            };
+            
+            // Render masing-masing tabel
+            let totalAset = render('aset', 'val_aset', 'sum_aset');
+            let totalKewajiban = render('kewajiban', 'val_kewajiban', 'sum_kewajiban');
+            let totalModal = render('modal', 'val_modal', 'sum_modal');
+            
+            // Kalkulasi Balance
+            let totalPassiva = totalKewajiban + totalModal;
+            document.getElementById('final_sum_aset').innerText = "Rp " + fmt(totalAset);
+            document.getElementById('final_sum_all').innerText = "Rp " + fmt(totalPassiva);
+            
+            let statusEl = document.getElementById('balance_status');
+            // Toleransi perbedaan 1 rupiah untuk menghindari masalah pembulatan desimal
+            if (Math.abs(totalAset - totalPassiva) <= 1) { 
+                statusEl.innerText = "✅ BALANCE";
+                statusEl.style.color = "#27ae60";
+                statusEl.style.backgroundColor = "#e8f8f5";
+            } else {
+                statusEl.innerText = "❌ TIDAK BALANCE";
+                statusEl.style.color = "#c0392b";
+                statusEl.style.backgroundColor = "#fdedec";
+            }
+
+            // Munculkan Pop-up secara otomatis setelah data selesai di-load (Delay 500ms agar natural)
+            setTimeout(() => {
+                openPopup();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
