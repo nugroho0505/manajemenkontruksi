@@ -74,26 +74,40 @@
         if (n < 1000000) return terbilang(Math.floor(n / 1000)) + " ribu" + terbilang(n % 1000);
         return terbilang(Math.floor(n / 1000000)) + " juta" + terbilang(n % 1000000);
     }
+window.onload = () => {
+    const params = new URLSearchParams(window.location.search);
+    
+    // Fungsi pembantu untuk mengambil data (Case Insensitive)
+    function getVal(key) {
+        for (let pair of params.entries()) {
+            if (pair[0].toLowerCase() === key.toLowerCase()) return pair[1];
+        }
+        return null;
+    }
 
-    window.onload = () => {
-        const params = new URLSearchParams(window.location.search);
-        
-        // Debug: Cetak ke Console F12 untuk melihat apa yang dikirim AppSheet
-        console.log("URL Parameters:", Object.fromEntries(params.entries()));
+    // 1. Set teks biasa (Proyek, Subcon, dll)
+    document.getElementById('val_proyek').innerText = decodeURIComponent(getVal('proyek') || '-');
+    document.getElementById('val_nama_subcon').innerText = decodeURIComponent(getVal('nama_subcon') || '-');
+    document.getElementById('val_no_kontrak').innerText = decodeURIComponent(getVal('no_kontrak') || '-');
+    document.getElementById('val_jenis_pajak').innerText = decodeURIComponent(getVal('jenis_pajak') || '-');
 
-        // Set teks biasa
-        ['proyek', 'no_kontrak', 'nama_subcon', 'jenis_pajak'].forEach(id => {
-            let val = params.get(id);
-            document.getElementById('val_'+id).innerText = val ? decodeURIComponent(val) : '-';
-        });
+    // 2. Set Angka dengan "Paksa"
+    // Kita cek semua variasi nama parameter
+    const setNum = (id, keys) => {
+        let val = 0;
+        keys.forEach(k => { if(getVal(k)) val = getVal(k); });
+        document.getElementById(id).innerText = fmt(val);
+        return parseInt(val);
+    };
 
-        // Set angka
-        ['nilai_bruto', 'nilai_pph', 'nilai_bersih', 'sisa_pembayaran'].forEach(id => {
-            let rawVal = params.get(id);
-            console.log(id + ": " + rawVal); // Debug angka
-            document.getElementById('val_'+id).innerText = fmt(rawVal);
-        });
-
+    setNum('val_nilai_bruto', ['nilai_bruto', 'Nilai_Bruto']);
+    setNum('val_nilai_pph', ['nilai_pph', 'Nilai_PPh']);
+    setNum('val_nilai_bersih', ['nilai_bersih', 'Nilai_Bersih']);
+    let sisa = setNum('val_sisa_pembayaran', ['sisa_pembayaran', 'Sisa_Pembayaran']);
+    
+    // Terbilang
+    document.getElementById('val_terbilang').innerText = (sisa > 0) ? terbilang(sisa) + " Rupiah" : "-";
+};
         // Terbilang
         let sisa = parseInt(params.get('sisa_pembayaran') || 0);
         document.getElementById('val_terbilang').innerText = terbilang(sisa) + " Rupiah";
