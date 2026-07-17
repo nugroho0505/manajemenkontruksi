@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Analisis Proyek</title>
+    <!-- Library untuk download PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 1mm; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 297mm; }
+        
+        .header { display: flex; align-items: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
+        .logo-img { max-width: 120px; margin-right: 20px; }
+        .header-text { flex-grow: 1; text-align: right; }
+        
+        .section-title { font-size: 14px; font-weight: bold; color: #fff; background: #34495e; padding: 8px 15px; margin: 25px 0 10px 0; border-radius: 4px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #34495e; border-radius: 4px; }
+        .info-box { background: #fff; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; }
+        .info-box span { display: block; font-size: 1.2em; font-weight: bold; margin-top: 5px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        th { background: #ecf0f1; color: #34495e; padding: 10px; text-align: left; border-bottom: 2px solid #bdc3c7; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-weight: bold; }
+        .center { text-align: center; }
+        
+        .row-total { background: #ecf0f1; font-weight: bold; border-top: 2px solid #34495e; }
+        .text-green { color: #27ae60; }
+        .text-red { color: #c0392b; }
+        .text-blue { color: #2980b9; }
+
+        .summary-box { margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 5px solid #27ae60; }
+        .summary-row { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+
+        /* Menu Pop-up */
+        #action-popup { position:fixed; top:20px; right:20px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999; }
+        button { display:block; width:100%; margin-bottom:8px; padding:8px; cursor:pointer; background:#34495e; color:#fff; border:none; border-radius:4px; }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Menu Pop-up -->
+    <div id="action-popup" class="no-print">
+        <button onclick="window.print()">🖨️ Cetak</button>
+        <button onclick="downloadPDF()">💾 Download PDF</button>
+        <button onclick="history.back()">⬅️ Back</button>
+    </div>
+
+    <div class="a4-container">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="logo-img">
+            <div class="header-text">
+                <h1 style="margin:0; font-size: 22px;">LAPORAN ANALISIS PROYEK</h1>
+                <p id="val_nama_proyek" style="margin:5px 0 0 0; font-weight:bold; color: #7f8c8d; text-transform: uppercase;">-</p>
+            </div>
+        </div>
+
+        <div class="section-title">1. INFO PROYEK & KONTRAK UTAMA</div>
+        <div class="info-grid">
+            <div style="grid-column: 1 / 4; padding-bottom: 5px; border-bottom: 1px solid #ccc;">
+                <strong>Lokasi:</strong> <span id="val_lokasi">-</span> | 
+                <strong>Tgl Mulai:</strong> <span id="val_tgl_mulai">-</span> | 
+                <strong>Status:</strong> <span id="val_status">-</span>
+            </div>
+            <div class="info-box"><strong>Nilai Kontrak Utama:</strong><span id="val_nilai_kontrak" class="text-blue">Rp 0</span></div>
+            <div class="info-box"><strong>Pembayaran Masuk:</strong><span id="val_pembayaran_masuk" class="text-green">Rp 0</span></div>
+            <div class="info-box"><strong>Sisa Tagihan (Piutang):</strong><span id="val_sisa_tagihan" class="text-red">Rp 0</span></div>
+        </div>
+
+        <div class="section-title">2. RINGKASAN KEWAJIBAN SUBCON</div>
+        <table>
+            <thead><tr><th>Deskripsi</th><th class="amount">Jumlah (Rp)</th><th class="center">Status</th></tr></thead>
+            <tbody>
+                <tr><td>Total Kontrak Subcon</td><td class="amount" id="val_subcon_total">0</td><td class="center">-</td></tr>
+                <tr><td>Total Sudah Dibayar</td><td class="amount" id="val_subcon_dibayar">0</td><td class="center">-</td></tr>
+                <tr class="row-total text-red"><td>SISA KEWAJIBAN</td><td class="amount" id="val_subcon_sisa">0</td><td class="center">(Hutang)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="section-title">3. DETAIL LABA RUGI PROYEK</div>
+        <table>
+            <thead><tr><th>Kategori Beban</th><th class="amount">Nilai (Rp)</th><th class="center">%</th></tr></thead>
+            <tbody id="val_list_beban"></tbody>
+            <tbody><tr class="row-total text-red"><td>TOTAL BEBAN</td><td class="amount" id="val_total_beban">0</td><td class="center">100%</td></tr></tbody>
+        </table>
+
+        <div class="section-title">4. RINGKASAN AKHIR</div>
+        <div class="summary-box">
+            <div class="summary-row"><span>Laba Rugi Bersih (Di Atas Kertas):</span> <span id="val_laba_rugi">Rp 0</span></div>
+            <div class="summary-row text-green" style="font-size:1.2em"><span>Estimasi Laba Real (Laba - Sisa Subcon):</span> <span id="val_laba_real">Rp 0</span></div>
+        </div>
+    </div>
+
+    <script>
+        function fmt(n) { let v = parseFloat(n); return isNaN(v) ? "0" : new Intl.NumberFormat('id-ID').format(v); }
+        function downloadPDF() {
+            const el = document.querySelector('.a4-container');
+            document.getElementById('action-popup').style.display = 'none';
+            html2pdf().set({filename: 'Laporan_Proyek.pdf', jsPDF: {format: 'a4', orientation: 'portrait'}}).from(el).save().then(() => {
+                document.getElementById('action-popup').style.display = 'block';
+            });
+        }
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const getV = (k) => { for(let p of params.entries()){ if(p[0].toLowerCase() === k.toLowerCase()) return p[1]; } return null; };
+            
+            ['nama_proyek', 'lokasi', 'tgl_mulai', 'status'].forEach(id => {
+                let v = getV(id); if(v) document.getElementById('val_'+id).innerText = v;
+            });
+            
+            ['nilai_kontrak', 'pembayaran_masuk', 'sisa_tagihan', 'subcon_total', 'subcon_dibayar', 'subcon_sisa', 'laba_rugi', 'laba_real'].forEach(id => {
+                let v = getV(id) || 0;
+                document.getElementById('val_'+id).innerText = "Rp " + fmt(v);
+            });
+
+            let list = getV('list_beban') || "";
+            let totBeban = parseFloat(getV('total_beban')) || 0;
+            document.getElementById('val_total_beban').innerText = fmt(totBeban);
+            let tbody = document.getElementById('val_list_beban');
+            list.split(',').forEach(r => {
+                let c = r.split('|');
+                if(c.length >= 2) {
+                    let pct = totBeban > 0 ? ((parseFloat(c[1])/totBeban)*100).toFixed(1) : 0;
+                    tbody.innerHTML += `<tr><td>- ${c[0]}</td><td class="amount">${fmt(c[1])}</td><td class="center">${pct}%</td></tr>`;
+                }
+            });
+        };
+    </script>
+</body>
+</html>
