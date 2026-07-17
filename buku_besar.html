@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         /* Pengaturan Kertas A4 & Padding Sesuai Request */
-        @page { size: A4; margin: 0; }
+        @page { size: A4 landscape; margin: 5mm; }
         body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
         .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 10mm; min-height: 297mm; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
@@ -120,7 +120,7 @@
                 filename: 'Buku_Besar_Proyek.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             }).from(el).save().then(() => {
                 openPopup();
             });
