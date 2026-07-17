@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laba Rugi Berjalan</title>
+    <!-- Library untuk download PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Pengaturan Kertas A4 & Padding */
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 10mm; min-height: 297mm; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* Tipografi & Header */
+        .header { text-align: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
+        .section-title { font-size: 14px; font-weight: bold; color: #fff; background: #34495e; padding: 8px 15px; margin-top: 20px; border-radius: 4px; margin-bottom: 10px; }
+        
+        /* Tabel & List */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px; }
+        th { background: #ecf0f1; padding: 10px; text-align: left; color: #34495e; border-bottom: 2px solid #bdc3c7; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-weight: bold; font-size: 14px; }
+        .center { text-align: center; }
+        
+        /* Warna Baris Khusus */
+        .row-highlight { background: #fdfefe; font-weight: bold; }
+        .row-total { font-weight: bold; color: #fff; }
+        .bg-blue { background: #2980b9; }
+        .bg-red { background: #c0392b; }
+        .bg-green { background: #27ae60; }
+        
+        .text-green { color: #27ae60; }
+        .text-red { color: #c0392b; }
+
+        /* Box Ringkasan Akhir */
+        .summary-box { padding: 20px; border: 2px solid #2c3e50; border-radius: 6px; background: #f8f9fa; margin-top: 30px; text-align: center; }
+        .summary-box h2 { margin: 0 0 10px 0; font-size: 18px; color: #34495e; }
+        .summary-box .net-profit { font-size: 28px; font-weight: bold; }
+
+        /* POP-UP STYLING */
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; display: none; }
+        #action-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; display: none; text-align: center; width: 280px; }
+        #action-popup h3 { margin-top: 0; color: #2c3e50; font-size: 18px; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; margin-bottom: 12px; padding: 12px; cursor: pointer; background: #34495e; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #2c3e50; }
+        .btn-close { background: #95a5a6; }
+        .btn-close:hover { background: #7f8c8d; }
+        #floating-btn { position: fixed; bottom: 20px; right: 20px; background: #34495e; color: #fff; padding: 15px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9997; border: none; font-size: 20px; display: none; }
+
+        /* Sembunyikan elemen UI saat dicetak */
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Area Pop-up Menu -->
+    <div id="backdrop" class="no-print"></div>
+    <div id="action-popup" class="no-print">
+        <h3>Menu Laba Rugi</h3>
+        <button class="btn" onclick="window.print()">🖨️ Cetak Dokumen</button>
+        <button class="btn" onclick="downloadPDF()">💾 Download PDF</button>
+        <button class="btn" onclick="history.back()">⬅️ Kembali ke Aplikasi</button>
+        <button class="btn btn-close" onclick="closePopup()">Tutup Menu</button>
+    </div>
+    
+    <!-- Tombol Mengapung -->
+    <button id="floating-btn" class="no-print" onclick="openPopup()">⚙️</button>
+
+    <!-- Kertas A4 -->
+    <div class="a4-container">
+        
+        <div class="header">
+            <h1 style="margin:0; font-size: 24px; color: #2c3e50;">LAPORAN LABA RUGI BERJALAN</h1>
+            <p id="val_perusahaan" style="font-weight:bold; color: #2c3e50; font-size: 18px; text-transform: uppercase; margin: 5px 0 0 0;">RISE DESIGN & BUILD</p>
+            <p id="val_periode" style="color: #7f8c8d; font-size: 14px; margin: 5px 0 0 0;">Periode: -</p>
+        </div>
+
+        <!-- BLOK I: LABA RUGI PROYEK -->
+        <div class="section-title">I. LABA RUGI PROYEK (CORE BUSINESS)</div>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Total Pendapatan Proyek</td>
+                    <td class="amount text-green" id="val_pendapatan_proyek">Rp 0</td>
+                </tr>
+                <tr>
+                    <td>Total Beban Langsung Proyek (Material, Subcon, dll)</td>
+                    <td class="amount text-red" id="val_beban_proyek">Rp 0</td>
+                </tr>
+                <tr class="row-total bg-blue">
+                    <td>LABA KOTOR PROYEK</td>
+                    <td class="amount" id="val_laba_kotor">Rp 0</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BLOK II: BEBAN NON-PROYEK -->
+        <div class="section-title">II. BEBAN NON-PROYEK (OPERASIONAL KANTOR)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Deskripsi Pengeluaran</th>
+                    <th class="amount">Jumlah (Rp)</th>
+                </tr>
+            </thead>
+            <tbody id="val_list_non_proyek">
+                <!-- Rincian Beban Non-Proyek Masuk Sini -->
+            </tbody>
+            <tbody>
+                <tr class="row-total bg-red">
+                    <td>TOTAL BEBAN NON-PROYEK</td>
+                    <td class="amount" id="val_total_non_proyek">Rp 0</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BLOK III: LABA BERSIH -->
+        <div class="summary-box">
+            <h2>LABA BERSIH PERUSAHAAN</h2>
+            <p style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px;">(Laba Kotor Proyek - Total Beban Non-Proyek)</p>
+            <div class="net-profit" id="val_laba_bersih">Rp 0</div>
+            <div id="status_profit" style="margin-top: 10px; font-weight: bold; font-size: 14px;">-</div>
+        </div>
+
+    </div>
+
+    <script>
+        // Fungsi Format Uang
+        function fmt(n) { return new Intl.NumberFormat('id-ID').format(parseFloat(n)||0); }
+        
+        // Logika Pop-up
+        function openPopup() {
+            document.getElementById('backdrop').style.display = 'block';
+            document.getElementById('action-popup').style.display = 'block';
+            document.getElementById('floating-btn').style.display = 'none';
+        }
+        function closePopup() {
+            document.getElementById('backdrop').style.display = 'none';
+            document.getElementById('action-popup').style.display = 'none';
+            document.getElementById('floating-btn').style.display = 'block';
+        }
+
+        // Fungsi Download PDF
+        function downloadPDF() {
+            closePopup(); 
+            const el = document.querySelector('.a4-container');
+            html2pdf().set({
+                margin: 0,
+                filename: 'Laba_Rugi_Berjalan.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(() => {
+                openPopup();
+            });
+        }
+        
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Header Info
+            let namaPerusahaan = params.get('nama_perusahaan');
+            if (namaPerusahaan) document.getElementById('val_perusahaan').innerText = namaPerusahaan;
+            document.getElementById('val_periode').innerText = "Periode: " + (params.get('periode') || "-");
+
+            // Kalkulasi Laba Kotor Proyek
+            let pendapatanProyek = parseFloat(params.get('pendapatan_proyek')) || 0;
+            let bebanProyek = parseFloat(params.get('beban_proyek')) || 0;
+            let labaKotor = pendapatanProyek - bebanProyek;
+            
+            document.getElementById('val_pendapatan_proyek').innerText = "Rp " + fmt(pendapatanProyek);
+            document.getElementById('val_beban_proyek').innerText = "Rp " + fmt(bebanProyek);
+            document.getElementById('val_laba_kotor').innerText = "Rp " + fmt(labaKotor);
+
+            // Render List Beban Non-Proyek
+            let listNonProyek = params.get('list_non_proyek') || "";
+            let tbodyNonProyek = document.getElementById('val_list_non_proyek');
+            let totalNonProyek = 0;
+            
+            if (listNonProyek.trim() !== "") {
+                listNonProyek.split(',').forEach(r => {
+                    let parts = r.split('|');
+                    if(parts.length >= 2) {
+                        let nama = parts[0].trim();
+                        let nilai = parseFloat(parts[1]) || 0;
+                        totalNonProyek += nilai;
+                        tbodyNonProyek.innerHTML += `<tr><td>${nama}</td><td class="amount">${fmt(nilai)}</td></tr>`;
+                    }
+                });
+            } else {
+                tbodyNonProyek.innerHTML = `<tr><td colspan="2" class="center" style="color:#999;">Tidak ada data beban operasional</td></tr>`;
+            }
+            document.getElementById('val_total_non_proyek').innerText = "Rp " + fmt(totalNonProyek);
+
+            // Kalkulasi Laba Bersih Perusahaan
+            let labaBersih = labaKotor - totalNonProyek;
+            let valLabaBersih = document.getElementById('val_laba_bersih');
+            let statusProfit = document.getElementById('status_profit');
+            
+            valLabaBersih.innerText = "Rp " + fmt(labaBersih);
+            
+            if (labaBersih > 0) {
+                valLabaBersih.style.color = "#27ae60"; // Hijau (Untung)
+                statusProfit.innerText = "📈 PERUSAHAAN MENGALAMI KEUNTUNGAN (PROFIT)";
+                statusProfit.style.color = "#27ae60";
+            } else if (labaBersih < 0) {
+                valLabaBersih.style.color = "#c0392b"; // Merah (Rugi)
+                statusProfit.innerText = "📉 PERUSAHAAN MENGALAMI KERUGIAN (DEFISIT)";
+                statusProfit.style.color = "#c0392b";
+            } else {
+                valLabaBersih.style.color = "#2c3e50";
+                statusProfit.innerText = "➖ BREAK EVEN POINT (BEP)";
+            }
+
+            // Tampilkan Pop-up otomatis setelah 500ms
+            setTimeout(() => { openPopup(); }, 500);
+        };
+    </script>
+</body>
+</html>
