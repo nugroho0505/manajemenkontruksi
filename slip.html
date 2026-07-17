@@ -76,67 +76,58 @@
             </div>
         </div>
     </div>
+<script>
+    function cleanNumber(str) {
+        if (!str) return 0;
+        // Menghapus titik, spasi, dan karakter lain agar menjadi angka murni
+        return parseInt(str.toString().replace(/[^0-9-]/g, '')) || 0;
+    }
 
-    <script>
-        // Fungsi membersihkan titik dan spasi agar bisa dihitung[span_1](start_span)[span_1](end_span)
-        function cleanNumber(str) {
-            if (!str) return 0;
-            return parseInt(str.toString().replace(/[^0-9-]/g, '')) || 0;
-        }
+    function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID').format(angka);
+    }
 
-        function formatRupiah(angka) {
-            return new Intl.NumberFormat('id-ID').format(angka);
-        }
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
 
-        function penyebut(nilai) {
-            var huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
-            if (nilai < 12) return " " + huruf[nilai];
-            if (nilai < 20) return penyebut(nilai - 10) + " belas";
-            if (nilai < 100) return penyebut(Math.floor(nilai/10)) + " puluh" + penyebut(nilai % 10);
-            if (nilai < 200) return " seratus" + penyebut(nilai - 100);
-            if (nilai < 1000) return penyebut(Math.floor(nilai/100)) + " ratus" + penyebut(nilai % 100);
-            if (nilai < 2000) return " seribu" + penyebut(nilai - 1000);
-            if (nilai < 1000000) return penyebut(Math.floor(nilai/1000)) + " ribu" + penyebut(nilai % 1000);
-            if (nilai < 1000000000) return penyebut(Math.floor(nilai/1000000)) + " juta" + penyebut(nilai % 1000000);
-            return penyebut(Math.floor(nilai/1000000000)) + " miliar" + penyebut(nilai % 1000000000);
-        }
+        // Isi data header
+        document.getElementById('val_periode').innerText = urlParams.get('periode') || '-';
+        document.getElementById('val_id_karyawan').innerText = urlParams.get('id_karyawan') || '-';
+        document.getElementById('val_nama_karyawan').innerText = urlParams.get('nama_karyawan') || '-';
+        document.getElementById('val_jabatan').innerText = urlParams.get('jabatan') || '-';
+        document.getElementById('val_jenis_pajak').innerText = urlParams.get('jenis_pajak') || '-';
 
-        function terbilang(nilai) {
-            if (nilai === 0) return "Nol Rupiah";
-            let hasil = penyebut(Math.abs(nilai));
-            return (nilai < 0 ? "Minus " : "") + hasil.trim() + " Rupiah";
-        }
+        // Isi data total
+        document.getElementById('val_total_pendapatan').innerText = formatRupiah(cleanNumber(urlParams.get('total_pendapatan')));
+        document.getElementById('val_total_potongan').innerText = formatRupiah(cleanNumber(urlParams.get('total_potongan')));
+        document.getElementById('val_gaji_bersih').innerText = formatRupiah(cleanNumber(urlParams.get('gaji_bersih')));
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const fields = ['periode', 'id_karyawan', 'nama_karyawan', 'jabatan', 'jenis_pajak'];
-            fields.forEach(f => { if(urlParams.has(f)) document.getElementById('val_'+f).innerText = decodeURIComponent(urlParams.get(f)); });
-
-            ['total_pendapatan', 'total_potongan', 'gaji_bersih'].forEach(f => {
-                if(urlParams.has(f)) document.getElementById('val_'+f).innerText = formatRupiah(cleanNumber(urlParams.get(f)));
-            });
-
-            function renderList(param, targetId, isPotongan) {
-                if (urlParams.has(param)) {
-                    let html = '', rows = decodeURIComponent(urlParams.get(param)).split(',');
-                    rows.forEach(r => {
-                        let cols = r.split('|');
-                        if(cols.length === 2) {
-                            let val = cleanNumber(cols[1]);
-                            html += `<tr><td>${cols[0]}</td><td class="amount" ${isPotongan ? 'style="color:#c0392b;"' : ''}>${isPotongan ? '('+formatRupiah(val)+')' : formatRupiah(val)}</td></tr>`;
-                        }
-                    });
-                    document.getElementById(targetId).innerHTML = html;
-                }
+        // Render List (Ditambah .replace(/\s*,\s*/g, ',') untuk membuang spasi di sekitar koma)
+        function renderList(param, targetId, isPotongan) {
+            if (urlParams.has(param)) {
+                let raw = decodeURIComponent(urlParams.get(param));
+                let cleanStr = raw.replace(/\s*,\s*/g, ','); // Hapus spasi di sekitar koma
+                let rows = cleanStr.split(',');
+                let html = '';
+                rows.forEach(r => {
+                    let cols = r.split('|');
+                    if(cols.length >= 2) {
+                        let val = cleanNumber(cols[1]);
+                        html += `<tr><td>${cols[0].trim()}</td><td class="amount" ${isPotongan ? 'style="color:#c0392b;"' : ''}>${isPotongan ? '('+formatRupiah(val)+')' : formatRupiah(val)}</td></tr>`;
+                    }
+                });
+                document.getElementById(targetId).innerHTML = html;
             }
+        }
 
-            renderList('list_pendapatan', 'val_list_pendapatan', false);
-            renderList('list_potongan', 'val_list_potongan', true);
-            
-            if(urlParams.has('gaji_bersih')) {
-                document.getElementById('val_terbilang').innerText = terbilang(cleanNumber(urlParams.get('gaji_bersih')));
-            }
-        });
-    </script>
+        renderList('list_pendapatan', 'val_list_pendapatan', false);
+        renderList('list_potongan', 'val_list_potongan', true);
+        
+        // Terbilang
+        if(urlParams.has('gaji_bersih')) {
+            document.getElementById('val_terbilang').innerText = terbilang(cleanNumber(urlParams.get('gaji_bersih')));
+        }
+    });
+</script>
 </body>
 </html>
