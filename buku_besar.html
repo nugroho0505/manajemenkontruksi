@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Buku Besar Proyek</title>
+    <!-- Library untuk download PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Pengaturan Kertas A4 & Padding Sesuai Request */
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 10mm; min-height: 297mm; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* Header & Judul */
+        .header { text-align: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
+        .section-title { font-size: 14px; font-weight: bold; color: #fff; background: #34495e; padding: 8px 15px; margin-top: 20px; border-radius: 4px; margin-bottom: 10px; }
+        
+        /* Tabel Buku Besar */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+        th { background: #34495e; color: #fff; padding: 10px; text-align: left; border: 1px solid #34495e; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-size: 13px; }
+        .center { text-align: center; }
+        
+        /* Baris Total & Saldo */
+        .row-total { background: #ecf0f1; font-weight: bold; border-top: 2px solid #34495e; }
+        .text-green { color: #27ae60; font-weight: bold; }
+        .text-red { color: #c0392b; font-weight: bold; }
+        
+        /* POP-UP STYLING (Konsisten dengan Neraca & LR) */
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; display: none; }
+        #action-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; display: none; text-align: center; width: 280px; }
+        #action-popup h3 { margin-top: 0; color: #2c3e50; font-size: 18px; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; margin-bottom: 12px; padding: 12px; cursor: pointer; background: #34495e; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #2c3e50; }
+        .btn-close { background: #95a5a6; }
+        .btn-close:hover { background: #7f8c8d; }
+        
+        /* Tombol Mengapung jika Pop-up ditutup */
+        #floating-btn { position: fixed; bottom: 20px; right: 20px; background: #34495e; color: #fff; padding: 15px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9997; border: none; font-size: 20px; display: none; }
+
+        /* Sembunyikan elemen UI saat cetak/PDF */
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Area Pop-up Menu -->
+    <div id="backdrop" class="no-print"></div>
+    <div id="action-popup" class="no-print">
+        <h3>Menu Buku Besar</h3>
+        <button class="btn" onclick="window.print()">🖨️ Cetak Dokumen</button>
+        <button class="btn" onclick="downloadPDF()">💾 Download PDF</button>
+        <button class="btn" onclick="history.back()">⬅️ Kembali ke Aplikasi</button>
+        <button class="btn btn-close" onclick="closePopup()">Tutup Menu</button>
+    </div>
+    
+    <!-- Tombol Mengapung -->
+    <button id="floating-btn" class="no-print" onclick="openPopup()">⚙️</button>
+
+    <!-- Kertas A4 -->
+    <div class="a4-container">
+        
+        <div class="header">
+            <h1 style="margin:0; font-size: 24px; color: #2c3e50;">BUKU BESAR (GENERAL LEDGER)</h1>
+            <p id="val_nama_akun" style="font-weight:bold; color: #7f8c8d; font-size: 16px; text-transform: uppercase; margin: 5px 0 0 0;">-</p>
+        </div>
+
+        <div class="section-title">MUTASI TRANSAKSI</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 12%;" class="center">Tanggal</th>
+                    <th style="width: 38%;">Deskripsi Transaksi</th>
+                    <th style="width: 15%;" class="center">Ref/Kategori</th>
+                    <th style="width: 11%;" class="amount">Debit (Rp)</th>
+                    <th style="width: 11%;" class="amount">Kredit (Rp)</th>
+                    <th style="width: 13%;" class="amount">Saldo (Rp)</th>
+                </tr>
+            </thead>
+            <tbody id="val_transaksi">
+                <!-- Data Transaksi dimasukkan di sini oleh JS -->
+            </tbody>
+            <tfoot>
+                <tr class="row-total">
+                    <td colspan="3" class="center">TOTAL MUTASI & SALDO AKHIR</td>
+                    <td class="amount text-green" id="tot_debit">0</td>
+                    <td class="amount text-red" id="tot_kredit">0</td>
+                    <td class="amount" id="final_saldo" style="background: #34495e; color: #fff;">0</td>
+                </tr>
+            </tfoot>
+        </table>
+
+    </div>
+
+    <script>
+        // Fungsi Format Mata Uang Rupiah
+        function fmt(n) { return new Intl.NumberFormat('id-ID').format(parseFloat(n)||0); }
+        
+        // Logika Kontrol Pop-up
+        function openPopup() {
+            document.getElementById('backdrop').style.display = 'block';
+            document.getElementById('action-popup').style.display = 'block';
+            document.getElementById('floating-btn').style.display = 'none';
+        }
+        function closePopup() {
+            document.getElementById('backdrop').style.display = 'none';
+            document.getElementById('action-popup').style.display = 'none';
+            document.getElementById('floating-btn').style.display = 'block';
+        }
+
+        // Fungsi Download PDF Elektrik via html2pdf
+        function downloadPDF() {
+            closePopup();
+            const el = document.querySelector('.a4-container');
+            html2pdf().set({
+                margin: 0,
+                filename: 'Buku_Besar_Proyek.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(() => {
+                openPopup();
+            });
+        }
+        
+        // Render data otomatis dari URL Params AppSheet
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Set Judul Akun / Proyek
+            document.getElementById('val_nama_akun').innerText = params.get('nama_akun') || "KAS UTAMA PROYEK";
+            
+            let dataParam = params.get('data') || "";
+            let tbody = document.getElementById('val_transaksi');
+            
+            let runningSaldo = 0;
+            let totalDebit = 0;
+            let totalKredit = 0;
+
+            if (dataParam.trim() !== "" && dataParam !== "null") {
+                tbody.innerHTML = "";
+                dataParam.split(',').forEach(row => {
+                    let columns = row.split('|');
+                    if (columns.length >= 5) {
+                        let tgl = columns[0].trim();
+                        let desc = columns[1].trim();
+                        let ref = columns[2].trim();
+                        let debit = parseFloat(columns[3]) || 0;
+                        let kredit = parseFloat(columns[4]) || 0;
+                        
+                        // Kalkulasi Akuntansi Buku Besar
+                        runningSaldo += (debit - kredit);
+                        totalDebit += debit;
+                        totalKredit += kredit;
+                        
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="center">${tgl}</td>
+                                <td>${desc}</td>
+                                <td class="center"><span style="background:#f1f2f6; padding:2px 6px; border-radius:4px; font-size:11px;">${ref}</span></td>
+                                <td class="amount ${debit > 0 ? 'text-green' : ''}">${debit > 0 ? fmt(debit) : '-'}</td>
+                                <td class="amount ${kredit > 0 ? 'text-red' : ''}">${kredit > 0 ? fmt(kredit) : '-'}</td>
+                                <td class="amount" style="font-weight:bold;">${fmt(runningSaldo)}</td>
+                            </tr>
+                        `;
+                    }
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6" class="center" style="color:#999; padding: 20px;">Belum ada riwayat transaksi pada akun ini.</td></tr>`;
+            }
+
+            // Tampilkan akumulasi total di footer tabel
+            document.getElementById('tot_debit').innerText = fmt(totalDebit);
+            document.getElementById('tot_kredit').innerText = fmt(totalKredit);
+            document.getElementById('final_saldo').innerText = "Rp " + fmt(runningSaldo);
+
+            // Trigger Pop-up Menu otomatis setelah 500ms
+            setTimeout(() => { openPopup(); }, 500);
+        };
+    </script>
+</body>
+</html>
