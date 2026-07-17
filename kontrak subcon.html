@@ -263,55 +263,63 @@
         </div>
 
     </div> <!-- Penutup a4-container -->
-
-   <script>
+<script>
     // Fungsi format ribuan otomatis
     function formatRupiah(angka) {
         return new Intl.NumberFormat('id-ID').format(angka);
     }
 
-    // Fungsi Terbilang (Tetap sama)
-    function penyebut(nilai) { /* ... isi fungsi penyebut yang lama ... */ }
-    function terbilang(nilai) { /* ... isi fungsi terbilang yang lama ... */ }
+    // Fungsi Terbilang (Tetap di JS)
+    function penyebut(nilai) {
+        var huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+        if (nilai < 12) return " " + huruf[nilai];
+        if (nilai < 20) return penyebut(nilai - 10) + " belas";
+        if (nilai < 100) return penyebut(Math.floor(nilai / 10)) + " puluh" + penyebut(nilai % 10);
+        if (nilai < 200) return " seratus" + penyebut(nilai - 100);
+        if (nilai < 1000) return penyebut(Math.floor(nilai / 100)) + " ratus" + penyebut(nilai % 100);
+        if (nilai < 2000) return " seribu" + penyebut(nilai - 1000);
+        if (nilai < 1000000) return penyebut(Math.floor(nilai / 1000)) + " ribu" + penyebut(nilai % 1000);
+        if (nilai < 1000000000) return penyebut(Math.floor(nilai / 1000000)) + " juta" + penyebut(nilai % 1000000);
+        return penyebut(Math.floor(nilai / 1000000000)) + " miliar" + penyebut(nilai % 1000000000);
+    }
+
+    function terbilang(nilai) {
+        if (nilai === 0) return "Nol Rupiah";
+        let hasil = penyebut(Math.abs(nilai));
+        return (nilai < 0 ? "Minus " : "") + hasil.trim() + " Rupiah";
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
 
-        // --- Fungsi untuk memformat angka langsung dari URL ---
-        function setElementValueFormatted(id, paramName) {
-            if (urlParams.has(paramName)) {
-                let val = parseInt(urlParams.get(paramName).replace(/[^0-9-]/g, '')) || 0;
-                document.getElementById(id).innerText = formatRupiah(val);
-                return val; // Kembalikan angka untuk perhitungan terbilang
-            }
-            return 0;
-        }
-
-        // Isi teks biasa
+        // A. Set teks biasa
         ['proyek', 'no_kontrak', 'nama_subcon', 'jenis_pajak'].forEach(id => {
             if(urlParams.has(id)) document.getElementById('val_'+id).innerText = decodeURIComponent(urlParams.get(id));
         });
 
-        // Isi angka berformat ribuan
-        setElementValueFormatted('val_nilai_bruto', 'nilai_bruto');
-        setElementValueFormatted('val_nilai_pph', 'nilai_pph');
-        setElementValueFormatted('val_nilai_bersih', 'nilai_bersih');
-        setElementValueFormatted('val_total_dibayar', 'total_dibayar');
-        let sisa = setElementValueFormatted('val_sisa_pembayaran', 'sisa_pembayaran');
+        // B. Set angka (tanpa hitung, langsung dari AppSheet)
+        ['nilai_bruto', 'nilai_pph', 'nilai_bersih', 'total_dibayar', 'sisa_pembayaran'].forEach(id => {
+            if(urlParams.has(id)) {
+                let val = urlParams.get(id); // Ambil angka murni dari AppSheet
+                document.getElementById('val_'+id).innerText = formatRupiah(val);
+                
+                // Khusus untuk sisa_pembayaran, sekalian hitung terbilangnya
+                if(id === 'sisa_pembayaran') {
+                    document.getElementById('val_terbilang').innerText = terbilang(parseInt(val));
+                }
+            }
+        });
         
-        // Update total sum bersih
-        document.getElementById('val_sum_bersih').innerText = formatRupiah(parseInt(urlParams.get('nilai_bersih')) || 0);
+        // Update val_sum_bersih agar sama dengan nilai_bersih
+        if(urlParams.has('nilai_bersih')) document.getElementById('val_sum_bersih').innerText = formatRupiah(urlParams.get('nilai_bersih'));
 
-        // Terbilang
-        document.getElementById('val_terbilang').innerText = terbilang(sisa);
-
-        // Render Tabel Riwayat
+        // C. Render Tabel Riwayat
         if (urlParams.has('riwayat_pembayaran')) {
             let html = '';
             decodeURIComponent(urlParams.get('riwayat_pembayaran')).split(',').forEach(r => {
                 let c = r.split('|');
                 if(c.length === 3) {
-                    html += `<tr><td>${c[0]}</td><td>${c[1]}</td><td class="amount">${formatRupiah(parseInt(c[2]))}</td></tr>`;
+                    html += `<tr><td>${c[0]}</td><td>${c[1]}</td><td class="amount">${formatRupiah(c[2])}</td></tr>`;
                 }
             });
             document.getElementById('val_riwayat_pembayaran').innerHTML = html;
