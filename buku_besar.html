@@ -95,8 +95,11 @@
 
     <script>
         // Fungsi Format Mata Uang Rupiah
-        function fmt(n) { return new Intl.NumberFormat('id-ID').format(parseFloat(n)||0); }
-        
+        function fmt(n) { 
+    let val = parseFloat(n) || 0;
+    if (val === 0) return "-"; // Otomatis mengubah nilai 0 menjadi strip
+    return new Intl.NumberFormat('id-ID').format(val); 
+}
         // Logika Kontrol Pop-up
         function openPopup() {
             document.getElementById('backdrop').style.display = 'block';
