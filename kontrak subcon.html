@@ -7,10 +7,23 @@
         @page { size: A4; margin: 20mm; }
         body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 20px; }
         .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 20mm; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 297mm; }
+        
         .header { display: flex; align-items: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
         .logo-img { max-width: 120px; margin-right: 20px; }
         .header-text { flex-grow: 1; text-align: right; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        
+        /* Mengubah grid menjadi 1 kolom (1fr) dan memberi aksen garis di kiri agar rapi */
+        .info-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 12px; 
+            margin-bottom: 25px; 
+            padding: 15px 20px; 
+            background: #f8f9fa; 
+            border-radius: 4px;
+            border-left: 4px solid #34495e; 
+        }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { background: #34495e; color: #fff; padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
@@ -22,18 +35,22 @@
 </head>
 <body>
     <div class="a4-container">
+        
+        <!-- HEADER -->
         <div class="header">
             <img src="logo.png" alt="Logo" class="logo-img">
             <div class="header-text">
-                <h1 style="margin:0; color:#34495e;">LAPORAN KONTRAK</h1>
-                <p id="val_no_kontrak" style="margin:0; font-weight:bold;"></p>
+                <h1 style="margin:0; color:#34495e; font-size: 22px;">LAPORAN KONTRAK SUBCON</h1>
+                <!-- Nama Proyek dipindah ke sini -->
+                <p id="val_proyek" style="margin:5px 0 0 0; font-weight:bold; color: #7f8c8d;"></p>
             </div>
         </div>
 
+        <!-- INFORMASI (1 Kolom) -->
         <div class="info-grid">
-            <div><strong>Proyek:</strong> <span id="val_proyek">-</span></div>
-            <div><strong>Subcon:</strong> <span id="val_nama_subcon">-</span></div>
-            <div><strong>Jenis Pajak:</strong> <span id="val_jenis_pajak">-</span></div>
+            <div><strong>No Kontrak :</strong> <span id="val_no_kontrak">-</span></div>
+            <div><strong>Nama Subcon :</strong> <span id="val_nama_subcon">-</span></div>
+            <div><strong>Jenis Pajak :</strong> <span id="val_jenis_pajak">-</span></div>
         </div>
 
         <h3>Rincian Nilai Kontrak</h3>
@@ -57,7 +74,6 @@
             <div class="terbilang-box" id="val_terbilang">-</div>
         </div>
     </div>
-    
         <script>
         // 1. FUNGSI FORMAT RUPIAH
         function fmt(n) { 
