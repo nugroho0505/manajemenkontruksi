@@ -2,55 +2,68 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Analisis Proyek</title>
-    <!-- Library untuk download PDF -->
+    <title>Laporan Analisis Proyek Lengkap</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        @page { size: A4; margin: 0; }
-        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 1mm; color: #2c3e50; }
-        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 1mm; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 297mm; }
+        @page { size: A4; margin: 20mm; }
+        body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 20px; color: #2c3e50; }
+        .a4-container { max-width: 210mm; margin: 0 auto; background: #fff; padding: 20mm; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 297mm; box-sizing: border-box; }
         
+        /* HEADER */
         .header { display: flex; align-items: center; border-bottom: 3px solid #34495e; padding-bottom: 15px; margin-bottom: 25px; }
-        .logo-img { max-width: 120px; margin-right: 20px; }
         .header-text { flex-grow: 1; text-align: right; }
-        
         .section-title { font-size: 14px; font-weight: bold; color: #fff; background: #34495e; padding: 8px 15px; margin: 25px 0 10px 0; border-radius: 4px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #34495e; border-radius: 4px; }
-        .info-box { background: #fff; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; }
+        
+        /* INFO GRID */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #34495e; border-radius: 4px; }
+        .info-header { grid-column: 1 / 4; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 5px; font-size: 13px; }
+        .info-box { background: #fff; padding: 10px 15px; border: 1px solid #dee2e6; border-radius: 4px; }
+        
+        /* Penyesuaian Flexbox untuk Judul Kotak + Persentase */
+        .info-box-header { display: flex; justify-content: space-between; font-size: 10px; color: #7f8c8d; font-weight: bold; }
+        
         .info-box span { display: block; font-size: 1.2em; font-weight: bold; margin-top: 5px; }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        /* TABLES */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
         th { background: #ecf0f1; color: #34495e; padding: 10px; text-align: left; border-bottom: 2px solid #bdc3c7; }
-        td { padding: 10px; border-bottom: 1px solid #ddd; }
-        .amount { text-align: right; font-family: monospace; font-weight: bold; }
+        td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; font-family: monospace; font-weight: bold; font-size: 13px; }
         .center { text-align: center; }
         
         .row-total { background: #ecf0f1; font-weight: bold; border-top: 2px solid #34495e; }
-        .text-green { color: #27ae60; }
-        .text-red { color: #c0392b; }
-        .text-blue { color: #2980b9; }
+        .text-green { color: #27ae60 !important; }
+        .text-red { color: #c0392b !important; }
+        .text-blue { color: #2980b9 !important; }
+        
+        /* SUMMARY BOX */
+        .summary-box { margin-top: 20px; padding: 20px; background: #f8f9fa; border-left: 5px solid #27ae60; border-radius: 4px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; margin-bottom: 10px; }
+        .summary-row.real { color: #27ae60; font-size: 1.3em; border-top: 1px dashed #ccc; padding-top: 10px; }
+        .summary-row.margin { color: #34495e; font-size: 1em; margin-top: 5px; font-weight: normal; }
 
-        .summary-box { margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 5px solid #27ae60; }
-        .summary-row { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
-
-        /* Menu Pop-up */
-        #action-popup { position:fixed; top:20px; right:20px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999; }
-        button { display:block; width:100%; margin-bottom:8px; padding:8px; cursor:pointer; background:#34495e; color:#fff; border:none; border-radius:4px; }
+        /* POP-UP STYLING */
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; display: none; }
+        #action-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; display: none; text-align: center; width: 280px; }
+        .btn { display: block; width: 100%; margin-bottom: 12px; padding: 12px; cursor: pointer; background: #34495e; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
+        #floating-btn { position: fixed; bottom: 20px; right: 20px; background: #34495e; color: #fff; padding: 15px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9997; border: none; font-size: 20px; display: none; }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
-
-    <!-- Menu Pop-up -->
+    <!-- POP-UP MENU -->
+    <div id="backdrop" class="no-print"></div>
     <div id="action-popup" class="no-print">
-        <button onclick="window.print()">🖨️ Cetak</button>
-        <button onclick="downloadPDF()">💾 Download PDF</button>
-        <button onclick="history.back()">⬅️ Back</button>
+        <h3 style="margin-top:0;">Menu Laporan</h3>
+        <button class="btn" onclick="window.print()">🖨️ Cetak</button>
+        <button class="btn" onclick="downloadPDF()">💾 Download PDF</button>
+        <button class="btn" style="background:#95a5a6;" onclick="closePopup()">Tutup</button>
     </div>
+    <button id="floating-btn" class="no-print" onclick="openPopup()">⚙️</button>
 
+    <!-- LAPORAN A4 -->
     <div class="a4-container">
         <div class="header">
-            <img src="logo.png" alt="Logo" class="logo-img">
             <div class="header-text">
                 <h1 style="margin:0; font-size: 22px;">LAPORAN ANALISIS PROYEK</h1>
                 <p id="val_nama_proyek" style="margin:5px 0 0 0; font-weight:bold; color: #7f8c8d; text-transform: uppercase;">-</p>
@@ -59,19 +72,37 @@
 
         <div class="section-title">1. INFO PROYEK & KONTRAK UTAMA</div>
         <div class="info-grid">
-            <div style="grid-column: 1 / 4; padding-bottom: 5px; border-bottom: 1px solid #ccc;">
-                <strong>Lokasi:</strong> <span id="val_lokasi">-</span> | 
-                <strong>Tgl Mulai:</strong> <span id="val_tgl_mulai">-</span> | 
-                <strong>Status:</strong> <span id="val_status">-</span>
+            <div class="info-header">
+                <div><strong>Lokasi:</strong> <span id="val_lokasi">-</span></div>
+                <div><strong>Mulai:</strong> <span id="val_tgl_mulai">-</span></div>
+                <div><strong>Status:</strong> <span id="val_status">-</span></div>
             </div>
-            <div class="info-box"><strong>Nilai Kontrak Utama:</strong><span id="val_nilai_kontrak" class="text-blue">Rp 0</span></div>
-            <div class="info-box"><strong>Pembayaran Masuk:</strong><span id="val_pembayaran_masuk" class="text-green">Rp 0</span></div>
-            <div class="info-box"><strong>Sisa Tagihan (Piutang):</strong><span id="val_sisa_tagihan" class="text-red">Rp 0</span></div>
+            
+            <div class="info-box">
+                <div class="info-box-header">Nilai Kontrak:</div>
+                <span id="val_nilai_kontrak" class="text-blue">Rp 0</span>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-box-header">
+                    <span>Masuk (Termin):</span>
+                    <span id="val_pct_masuk" class="text-green" style="font-size:10px; margin:0;">0%</span>
+                </div>
+                <span id="val_pembayaran_masuk" class="text-green">Rp 0</span>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-box-header">
+                    <span>Sisa Tagihan:</span>
+                    <span id="val_pct_sisa" class="text-red" style="font-size:10px; margin:0;">0%</span>
+                </div>
+                <span id="val_sisa_tagihan" class="text-red">Rp 0</span>
+            </div>
         </div>
 
         <div class="section-title">2. RINGKASAN KEWAJIBAN SUBCON</div>
         <table>
-            <thead><tr><th>Deskripsi</th><th class="amount">Jumlah (Rp)</th><th class="center">Status</th></tr></thead>
+            <thead><tr><th>Deskripsi</th><th class="amount" style="width:30%;">Jumlah (Rp)</th><th class="center" style="width:15%;">Status</th></tr></thead>
             <tbody>
                 <tr><td>Total Kontrak Subcon</td><td class="amount" id="val_subcon_total">0</td><td class="center">-</td></tr>
                 <tr><td>Total Sudah Dibayar</td><td class="amount" id="val_subcon_dibayar">0</td><td class="center">-</td></tr>
@@ -79,53 +110,111 @@
             </tbody>
         </table>
 
-        <div class="section-title">3. DETAIL LABA RUGI PROYEK</div>
+        <div class="section-title">3. DETAIL BEBAN PROYEK</div>
         <table>
-            <thead><tr><th>Kategori Beban</th><th class="amount">Nilai (Rp)</th><th class="center">%</th></tr></thead>
-            <tbody id="val_list_beban"></tbody>
-            <tbody><tr class="row-total text-red"><td>TOTAL BEBAN</td><td class="amount" id="val_total_beban">0</td><td class="center">100%</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th>Kategori Beban</th>
+                    <th class="amount" style="width:30%;">Nilai (Rp)</th>
+                    <th class="center" style="width:15%;">Persentase</th>
+                </tr>
+            </thead>
+            <tbody id="val_list_beban">
+                <!-- Rincian disuntikkan via JS -->
+            </tbody>
+            <tbody>
+                <tr class="row-total text-red">
+                    <td>TOTAL BEBAN PROYEK</td>
+                    <td class="amount" id="val_total_beban">0</td>
+                    <td class="center">100%</td>
+                </tr>
+            </tbody>
         </table>
 
-        <div class="section-title">4. RINGKASAN AKHIR</div>
-        <div class="summary-box">
-            <div class="summary-row"><span>Laba Rugi Bersih :</span> <span id="val_laba_rugi">Rp 0</span></div>
-            <div class="summary-row text-green" style="font-size:1.2em"><span>Estimasi Laba Real (Laba - Sisa Subcon):</span> <span id="val_laba_real">Rp 0</span></div>
+        <div class="section-title" style="background: transparent; color: #34495e; border-bottom: 2px solid #34495e; padding: 0 0 5px 0;">4. RINGKASAN AKHIR</div>
+        <div class="summary-box" id="summary_container">
+            <div class="summary-row">
+                <span>Laba Rugi Bersih :</span> 
+                <span id="val_laba_rugi">Rp 0</span>
+            </div>
+            <div class="summary-row real">
+                <span>Estimasi Laba Real (Laba - Sisa Subcon):</span> 
+                <span id="val_laba_real">Rp 0</span>
+            </div>
+            <!-- Margin laba ditambahkan di sini oleh JS -->
         </div>
     </div>
 
     <script>
-        function fmt(n) { let v = parseFloat(n); return isNaN(v) ? "0" : new Intl.NumberFormat('id-ID').format(v); }
-        function downloadPDF() {
-            const el = document.querySelector('.a4-container');
-            document.getElementById('action-popup').style.display = 'none';
-            html2pdf().set({filename: 'Laporan_Proyek.pdf', jsPDF: {format: 'a4', orientation: 'portrait'}}).from(el).save().then(() => {
-                document.getElementById('action-popup').style.display = 'block';
-            });
+        function fmt(n) { 
+            let val = parseFloat(n);
+            return isNaN(val) ? "0" : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val); 
         }
+        
+        function openPopup() { document.getElementById('backdrop').style.display='block'; document.getElementById('action-popup').style.display='block'; document.getElementById('floating-btn').style.display='none'; }
+        function closePopup() { document.getElementById('backdrop').style.display='none'; document.getElementById('action-popup').style.display='none'; document.getElementById('floating-btn').style.display='block'; }
+        function downloadPDF() { closePopup(); html2pdf().set({filename: 'Analisis_Proyek.pdf', jsPDF: {format: 'a4'}}).from(document.querySelector('.a4-container')).save().then(openPopup); }
+
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
-            const getV = (k) => { for(let p of params.entries()){ if(p[0].toLowerCase() === k.toLowerCase()) return p[1]; } return null; };
             
+            // 1. Set Info Teks
             ['nama_proyek', 'lokasi', 'tgl_mulai', 'status'].forEach(id => {
-                let v = getV(id); if(v) document.getElementById('val_'+id).innerText = v;
+                let val = params.get(id);
+                if(val) document.getElementById('val_'+id).innerText = val;
             });
             
-            ['nilai_kontrak', 'pembayaran_masuk', 'sisa_tagihan', 'subcon_total', 'subcon_dibayar', 'subcon_sisa', 'laba_rugi', 'laba_real'].forEach(id => {
-                let v = getV(id) || 0;
-                document.getElementById('val_'+id).innerText = "Rp " + fmt(v);
+            // 2. Set Nilai Angka Utama
+            ['nilai_kontrak', 'pembayaran_masuk', 'sisa_tagihan', 'subcon_total', 'subcon_dibayar', 'subcon_sisa', 'total_beban', 'laba_rugi', 'laba_real'].forEach(id => {
+                let val = params.get(id) || 0;
+                document.getElementById('val_'+id).innerText = fmt(val);
             });
 
-            let list = getV('list_beban') || "";
-            let totBeban = parseFloat(getV('total_beban')) || 0;
-            document.getElementById('val_total_beban').innerText = fmt(totBeban);
+            // Kalkulasi Persentase Termin Masuk & Sisa Tagihan
+            let nilaiKontrak = parseFloat(params.get('nilai_kontrak')) || 0;
+            let bayarMasuk = parseFloat(params.get('pembayaran_masuk')) || 0;
+            let sisaTagihan = parseFloat(params.get('sisa_tagihan')) || 0;
+
+            let pctMasuk = (nilaiKontrak > 0) ? ((bayarMasuk / nilaiKontrak) * 100).toFixed(1) : 0;
+            let pctSisa = (nilaiKontrak > 0) ? ((sisaTagihan / nilaiKontrak) * 100).toFixed(1) : 0;
+
+            document.getElementById('val_pct_masuk').innerText = pctMasuk + '%';
+            document.getElementById('val_pct_sisa').innerText = pctSisa + '%';
+
+            // 3. Render List Beban & Hitung Persentase
+            let list = params.get('list_beban') || "";
             let tbody = document.getElementById('val_list_beban');
-            list.split(',').forEach(r => {
-                let c = r.split('|');
-                if(c.length >= 2) {
-                    let pct = totBeban > 0 ? ((parseFloat(c[1])/totBeban)*100).toFixed(1) : 0;
-                    tbody.innerHTML += `<tr><td>- ${c[0]}</td><td class="amount">${fmt(c[1])}</td><td class="center">${pct}%</td></tr>`;
-                }
-            });
+            let totalBeban = parseFloat(params.get('total_beban')) || 0;
+            
+            if (list) {
+                list.split(',').forEach(r => {
+                    let c = r.split('|');
+                    if(c.length >= 2) {
+                        let nilai = parseFloat(c[1]) || 0;
+                        let persentase = (totalBeban > 0) ? ((nilai / totalBeban) * 100).toFixed(1) : 0;
+                        tbody.innerHTML += `<tr>
+                            <td>- ${c[0]}</td>
+                            <td class="amount">${fmt(nilai)}</td>
+                            <td class="center">${persentase}%</td>
+                        </tr>`;
+                    }
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3" class="center" style="color:#999;">Tidak ada rincian beban</td></tr>`;
+            }
+
+            // 4. Hitung dan Tampilkan Margin Laba
+            let labaRugi = parseFloat(params.get('laba_rugi')) || 0;
+            let marginLaba = (nilaiKontrak > 0) ? ((labaRugi / nilaiKontrak) * 100).toFixed(1) : 0;
+            
+            document.getElementById('summary_container').innerHTML += `
+                <div class="summary-row margin">
+                    <span>Margin Laba Keseluruhan (Profit Margin):</span> 
+                    <strong>${marginLaba}%</strong>
+                </div>
+            `;
+
+            setTimeout(openPopup, 500);
         };
     </script>
 </body>
